@@ -1,0 +1,8 @@
+prefix=/home/wooki/CatkinWorkspace/src/elektron_escort/cmake-build-debug/devel
+
+Name: elektron_escort
+Description: Description of elektron_escort
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/wooki/CatkinWorkspace/src/elektron_escort/cmake-build-debug/devel/lib 
+Requires: 

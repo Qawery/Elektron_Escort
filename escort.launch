@@ -1,0 +1,8 @@
+<launch>
+	<master auto="start"/>
+	<node pkg="elektron_escort" type="escort_main" respawn="false" name="escort_main" output="screen">
+
+		<param name="launch_param" type="string" value="LAUNCH_LOL"/>
+
+	</node>
+</launch>
