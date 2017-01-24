@@ -1,0 +1,8 @@
+//
+// Created by wooki on 24.01.17.
+//
+
+#ifndef ELEKTRON_ESCORT_DATASTORAGE_H
+#define ELEKTRON_ESCORT_DATASTORAGE_H
+
+#endif //ELEKTRON_ESCORT_DATASTORAGE_H
