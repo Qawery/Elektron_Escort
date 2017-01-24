@@ -575,6 +575,12 @@
 		<Unit filename="/home/wooki/CatkinWorkspace/src/elektron_escort/src/escort_main.cpp">
 			<Option target="escort_main"/>
 		</Unit>
+		<Unit filename="/home/wooki/CatkinWorkspace/src/elektron_escort/src/test.cpp">
+			<Option target="escort_main"/>
+		</Unit>
+		<Unit filename="/home/wooki/CatkinWorkspace/src/elektron_escort/src/test.h">
+			<Option target="escort_main"/>
+		</Unit>
 		<Unit filename="/usr/src/gtest/src/gtest-all.cc">
 			<Option target="gtest"/>
 		</Unit>

@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/escort_main.dir/src/escort_main.cpp.o"
+  "CMakeFiles/escort_main.dir/src/test.cpp.o"
   "devel/lib/elektron_escort/escort_main.pdb"
   "devel/lib/elektron_escort/escort_main"
 )

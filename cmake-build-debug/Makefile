@@ -647,6 +647,33 @@ src/escort_main.cpp.s:
 	$(MAKE) -f CMakeFiles/escort_main.dir/build.make CMakeFiles/escort_main.dir/src/escort_main.cpp.s
 .PHONY : src/escort_main.cpp.s
 
+src/test.o: src/test.cpp.o
+
+.PHONY : src/test.o
+
+# target to build an object file
+src/test.cpp.o:
+	$(MAKE) -f CMakeFiles/escort_main.dir/build.make CMakeFiles/escort_main.dir/src/test.cpp.o
+.PHONY : src/test.cpp.o
+
+src/test.i: src/test.cpp.i
+
+.PHONY : src/test.i
+
+# target to preprocess a source file
+src/test.cpp.i:
+	$(MAKE) -f CMakeFiles/escort_main.dir/build.make CMakeFiles/escort_main.dir/src/test.cpp.i
+.PHONY : src/test.cpp.i
+
+src/test.s: src/test.cpp.s
+
+.PHONY : src/test.s
+
+# target to generate assembly for a file
+src/test.cpp.s:
+	$(MAKE) -f CMakeFiles/escort_main.dir/build.make CMakeFiles/escort_main.dir/src/test.cpp.s
+.PHONY : src/test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -698,6 +725,9 @@ help:
 	@echo "... src/escort_main.o"
 	@echo "... src/escort_main.i"
 	@echo "... src/escort_main.s"
+	@echo "... src/test.o"
+	@echo "... src/test.i"
+	@echo "... src/test.s"
 .PHONY : help
 
 
