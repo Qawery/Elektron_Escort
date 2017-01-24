@@ -1,8 +1,0 @@
-prefix=/usr/local
-
-Name: elektron_escort
-Description: Description of elektron_escort
-Version: 0.0.0
-Cflags: 
-Libs: -L/usr/local/lib 
-Requires: 
