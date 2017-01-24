@@ -1,15 +1,11 @@
 #include <ros/ros.h>
 #include <ros/package.h>
+#include "DefaultValues.h"
 #include "DataStorage.h"
-
-//Default parameters values
-#define DEFAULT_MAIN_LOOP_RATE 30
-#define DEFAULT_MAX_USERS 10
-#define DEFAULT_POSE_COOLDOWN_TIME 3
-double mainLoopRate;
 
 ros::NodeHandle* nodeHandlePublic;
 ros::NodeHandle* nodeHandlePrivate;
+double mainLoopRate;
 DataStorage* dataStorage;
 
 bool Initialization()
@@ -23,22 +19,13 @@ bool Initialization()
         mainLoopRate = DEFAULT_MAIN_LOOP_RATE;
     }
     dataStorage = new DataStorage();
-    int maxUsers;
-	if(!nodeHandlePrivate->getParam("maxUsers", maxUsers))
-	{
-		ROS_WARN("Value of maxUsers not found, using default: %d.", DEFAULT_MAX_USERS);
-		maxUsers = DEFAULT_MAX_USERS;
-	}
-    dataStorage->SetMaxUsers(maxUsers);
-    double poseCooldownTime;
-    if(!nodeHandlePrivate->getParam("poseCooldownTime", poseCooldownTime))
+    if(!dataStorage->Initialize(nodeHandlePrivate))
     {
-        ROS_WARN("Value of poseCooldownTime not found, using default: %d.", DEFAULT_POSE_COOLDOWN_TIME);
-        poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
+        return false;
     }
-    dataStorage->SetPoseCooldownTime(poseCooldownTime);
 
     //OpenNI initialization
+    //...
 
 	return true;
 }
@@ -48,6 +35,7 @@ void UpdateSensorsData()
     dataStorage->UpdatePoseCooldowns(1.0f/mainLoopRate);
 }
 
+//TODO: usunąć
 void Debug()
 {
 }
@@ -64,6 +52,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "escort_main");
 	if(Initialization())
 	{
+        ROS_INFO("Initialization complete, starting program.");
 		ros::Rate mainLoopRate(mainLoopRate);
 		while (ros::ok())
 		{

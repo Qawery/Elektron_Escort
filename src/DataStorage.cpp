@@ -6,6 +6,26 @@ DataStorage::DataStorage()
     SetPoseCooldownTime(0);
 }
 
+bool DataStorage::Initialize(ros::NodeHandle *nodeHandlePrivate)
+{
+    int _maxUsers;
+    if(!nodeHandlePrivate->getParam("maxUsers", _maxUsers))
+    {
+        ROS_WARN("Value of maxUsers not found, using default: %d.", DEFAULT_MAX_USERS);
+        _maxUsers = DEFAULT_MAX_USERS;
+    }
+    SetMaxUsers(_maxUsers);
+    double _poseCooldownTime;
+    if(!nodeHandlePrivate->getParam("poseCooldownTime", _poseCooldownTime))
+    {
+        ROS_WARN("Value of poseCooldownTime not found, using default: %d.", DEFAULT_POSE_COOLDOWN_TIME);
+        _poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
+    }
+    SetPoseCooldownTime(_poseCooldownTime);
+
+    return true;
+}
+
 void DataStorage::UpdatePoseCooldowns(float timeElapsed)
 {
     for(int i=0; i<maxUsers; ++i)
