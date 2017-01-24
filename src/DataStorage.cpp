@@ -6,7 +6,7 @@ DataStorage::DataStorage()
     SetPoseCooldownTime(0);
 }
 
-bool DataStorage::Initialize(ros::NodeHandle *nodeHandlePrivate)
+bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
 {
     int _maxUsers;
     if(!nodeHandlePrivate->getParam("maxUsers", _maxUsers))
@@ -22,7 +22,6 @@ bool DataStorage::Initialize(ros::NodeHandle *nodeHandlePrivate)
         _poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
     }
     SetPoseCooldownTime(_poseCooldownTime);
-
     return true;
 }
 

@@ -1,8 +1,8 @@
 #ifndef ELEKTRON_ESCORT_DATASTORAGE_H
 #define ELEKTRON_ESCORT_DATASTORAGE_H
 
-#include "DefaultValues.h"
 #include <ros/ros.h>
+#include "DefaultValues.h"
 
 class DataStorage
 {

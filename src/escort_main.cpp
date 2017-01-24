@@ -2,11 +2,13 @@
 #include <ros/package.h>
 #include "DefaultValues.h"
 #include "DataStorage.h"
+#include "SensorsModule.h"
 
 ros::NodeHandle* nodeHandlePublic;
 ros::NodeHandle* nodeHandlePrivate;
-double mainLoopRate;
 DataStorage* dataStorage;
+SensorsModule* sensorsModule;
+double mainLoopRate;
 
 bool Initialization()
 {
@@ -19,20 +21,32 @@ bool Initialization()
         mainLoopRate = DEFAULT_MAIN_LOOP_RATE;
     }
     dataStorage = new DataStorage();
-    if(!dataStorage->Initialize(nodeHandlePrivate))
+    if(dataStorage->Initialize(nodeHandlePrivate))
     {
+        ROS_DEBUG("Data storage initialized successfully.");
+    }
+    else
+    {
+        ROS_ERROR("Failed to initialize data storage");
         return false;
     }
-
-    //OpenNI initialization
-    //...
-
+    sensorsModule = new SensorsModule(dataStorage);
+    if(sensorsModule->Initialize())
+    {
+        ROS_DEBUG("Sensors module initialized successfully.");
+    }
+    else
+    {
+        ROS_ERROR("Failed to initialize sensors module.");
+        return false;
+    }
 	return true;
 }
 
 void UpdateSensorsData()
 {
     dataStorage->UpdatePoseCooldowns(1.0f/mainLoopRate);
+    sensorsModule->Update();
 }
 
 //TODO: usunąć
@@ -45,6 +59,8 @@ void Finish()
 	delete nodeHandlePublic;
 	delete nodeHandlePrivate;
     delete dataStorage;
+    sensorsModule->Finish();
+    delete sensorsModule;
 }
 
 int main(int argc, char **argv)
