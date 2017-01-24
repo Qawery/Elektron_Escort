@@ -20,7 +20,7 @@ include_directories(${catkin_INCLUDEDIR}
 link_directories(${catkin_LIBRARY_DIRS})
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
-add_executable(escort_main src/escort_main.cpp)
+add_executable(escort_main src/escort_main.cpp src/DataStorage.cpp)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
 				     ${OpenNI_LIBRARIES}
