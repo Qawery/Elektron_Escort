@@ -6,8 +6,6 @@
 
 ros::NodeHandle* nodeHandlePublic;
 ros::NodeHandle* nodeHandlePrivate;
-DataStorage* dataStorage;
-SensorsModule* sensorsModule;
 double mainLoopRate;
 
 bool Initialization()
@@ -20,8 +18,7 @@ bool Initialization()
         ROS_WARN("Value of mainLoopRate not found, using default: %d.", DEFAULT_MAIN_LOOP_RATE);
         mainLoopRate = DEFAULT_MAIN_LOOP_RATE;
     }
-    dataStorage = new DataStorage();
-    if(dataStorage->Initialize(nodeHandlePrivate))
+    if(DataStorage::GetInstance().Initialize(nodeHandlePrivate))
     {
         ROS_DEBUG("Data storage initialized successfully.");
     }
@@ -30,8 +27,7 @@ bool Initialization()
         ROS_ERROR("Failed to initialize data storage");
         return false;
     }
-    sensorsModule = new SensorsModule(dataStorage);
-    if(sensorsModule->Initialize())
+    if(SensorsModule::GetInstance().Initialize())
     {
         ROS_DEBUG("Sensors module initialized successfully.");
     }
@@ -45,8 +41,8 @@ bool Initialization()
 
 void Update()
 {
-    dataStorage->UpdatePoseCooldowns(1.0f/mainLoopRate);
-    sensorsModule->Update();
+    DataStorage::GetInstance().UpdatePoseCooldowns(1.0f/mainLoopRate);
+    SensorsModule::GetInstance().Update();
 }
 
 //TODO: usunąć
@@ -58,9 +54,7 @@ void Finish()
 {
 	delete nodeHandlePublic;
 	delete nodeHandlePrivate;
-    delete dataStorage;
-    sensorsModule->Finish();
-    delete sensorsModule;
+    SensorsModule::GetInstance().Finish();
 }
 
 int main(int argc, char **argv)

@@ -12,15 +12,24 @@
 class SensorsModule
 {
 public:
-    SensorsModule(DataStorage* _dataStorage);
+    static SensorsModule& GetInstance()
+    {
+        static SensorsModule instance;
+        return instance;
+    }
     bool Initialize();
     void Update();
     void Finish();
-    static bool GetIsCalibrationFilePresent();
-    static void SetIsCalibrationFilePresent(bool _isCalibrationfilePresent);
+    bool GetIsCalibrationFilePresent();
+    void SetIsCalibrationFilePresent(bool _isCalibrationfilePresent);
+    xn::UserGenerator GetUserGenerator();
 
 private:
-    DataStorage* dataStorage;
+    SensorsModule() {}
+    SensorsModule(const SensorsModule &);
+    SensorsModule& operator=(const SensorsModule&);
+    ~SensorsModule() {}
+
     xn::Context context;
     xn::DepthGenerator depthGenerator;
     xn::UserGenerator userGenerator;
@@ -29,7 +38,8 @@ private:
     XnCallbackHandle poseCallbacksHandle;
     XnBool isCalibrationPoseNeeded;
     XnChar startingPose[20];
-    static bool isCalibrationFilePresent;
+    bool isCalibrationFilePresent;
+
     static void User_NewUser(xn::UserGenerator& generator, XnUserID userId, void* cookie);
     static void User_LostUser(xn::UserGenerator& generator, XnUserID userId, void* cookie);
     static void UserPose_PoseDetected(xn::PoseDetectionCapability& capability, XnChar const* strPose, XnUserID userId, void* pCookie);

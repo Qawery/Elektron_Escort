@@ -1,12 +1,5 @@
 #include "SensorsModule.h"
 
-bool SensorsModule::isCalibrationFilePresent;
-
-SensorsModule::SensorsModule(DataStorage *_dataStorage)
-{
-    dataStorage = _dataStorage;
-}
-
 bool SensorsModule::Initialize()
 {
     std::string configFilename = ros::package::getPath("elektron_escort") + "/OpenNi_config.xml";	//Pobranie nazwy pliku konfiguracyjnego.
@@ -58,7 +51,7 @@ bool SensorsModule::Initialize()
     userGenerator.GetSkeletonCap().RegisterCalibrationCallbacks(UserCalibration_CalibrationStart, UserCalibration_CalibrationEnd, NULL, calibrationCallbacksHandle);
     userGenerator.GetPoseDetectionCap().RegisterToPoseCallbacks(this->UserPose_PoseDetected, NULL, NULL, poseCallbacksHandle);
     remove(DEFAULT_CALIBRATION_FILE_NAME);
-    SetIsCalibrationFilePresent(false);
+    isCalibrationFilePresent = false;
     return true;
 }
 
@@ -86,10 +79,21 @@ void SensorsModule::SetIsCalibrationFilePresent(bool _isCalibrationfilePresent)
     isCalibrationFilePresent = _isCalibrationfilePresent;
 }
 
+xn::UserGenerator SensorsModule::GetUserGenerator()
+{
+    return userGenerator;
+}
 
 void SensorsModule::User_NewUser(xn::UserGenerator& generator, XnUserID userId, void* cookie)
 {
     ROS_DEBUG("New user: %d", userId);
+    generator.GetPoseDetectionCap().StartPoseDetection("Psi", userId);
+    if(SensorsModule::GetInstance().GetIsCalibrationFilePresent())
+    {
+        generator.GetSkeletonCap().LoadCalibrationDataFromFile(userId, DEFAULT_CALIBRATION_FILE_NAME);
+        generator.GetSkeletonCap().StartTracking(userId);
+        ROS_DEBUG("Loaded calibration data from file.");
+    }
 }
 
 
@@ -107,11 +111,20 @@ void SensorsModule::UserPose_PoseDetected(xn::PoseDetectionCapability& capabilit
 
 void SensorsModule::UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID userId, void* cookie)
 {
-    ROS_DEBUG("calibration start for user: %d", userId);
+    ROS_DEBUG("Calibration start for user: %d", userId);
 }
 
 
 void SensorsModule::UserCalibration_CalibrationEnd(xn::SkeletonCapability& capability, XnUserID userId, XnBool success, void* cookie)
 {
-    ROS_DEBUG("Calibration end for user: %d", userId);
+    if (success)
+    {
+        ROS_DEBUG("Calibration successful for user: %d", userId);
+        SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().StartTracking(userId);
+    }
+    else
+    {
+        ROS_DEBUG("Calibration failed for user: %d", userId);
+    }
+    SensorsModule::GetInstance().GetUserGenerator().GetPoseDetectionCap().StartPoseDetection("Psi", userId);
 }

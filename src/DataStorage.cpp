@@ -1,11 +1,5 @@
 #include "DataStorage.h"
 
-DataStorage::DataStorage()
-{
-    SetMaxUsers(1);
-    SetPoseCooldownTime(0);
-}
-
 bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
 {
     int _maxUsers;
