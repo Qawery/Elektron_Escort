@@ -49,8 +49,8 @@ bool SensorsModule::Initialize()
     userGenerator.GetSkeletonCap().SetSkeletonProfile(XN_SKEL_PROFILE_ALL);
     userGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, userCallbacksHandle);
     userGenerator.GetSkeletonCap().RegisterCalibrationCallbacks(UserCalibration_CalibrationStart, UserCalibration_CalibrationEnd, NULL, calibrationCallbacksHandle);
-    userGenerator.GetPoseDetectionCap().RegisterToPoseCallbacks(this->UserPose_PoseDetected, NULL, NULL, poseCallbacksHandle);
-    remove(DEFAULT_CALIBRATION_FILE_NAME);
+    userGenerator.GetPoseDetectionCap().RegisterToPoseCallbacks(UserPose_PoseDetected, NULL, NULL, poseCallbacksHandle);
+    remove(CALIBRATION_FILE_NAME);
     isCalibrationFilePresent = false;
     return true;
 }
@@ -65,7 +65,7 @@ void SensorsModule::Finish()
     context.Release();
     if(isCalibrationFilePresent)
     {
-        remove(DEFAULT_CALIBRATION_FILE_NAME);
+        remove(CALIBRATION_FILE_NAME);
     }
 }
 
@@ -90,34 +90,38 @@ void SensorsModule::User_NewUser(xn::UserGenerator& generator, XnUserID userId, 
     generator.GetPoseDetectionCap().StartPoseDetection("Psi", userId);
     if(SensorsModule::GetInstance().GetIsCalibrationFilePresent())
     {
-        generator.GetSkeletonCap().LoadCalibrationDataFromFile(userId, DEFAULT_CALIBRATION_FILE_NAME);
+        generator.GetSkeletonCap().LoadCalibrationDataFromFile(userId, CALIBRATION_FILE_NAME);
         generator.GetSkeletonCap().StartTracking(userId);
         ROS_DEBUG("Loaded calibration data from file.");
     }
 }
-
 
 void SensorsModule::User_LostUser(xn::UserGenerator& generator, XnUserID userId, void* cookie)
 {
     ROS_DEBUG("Lost user: %d", userId);
 }
 
-
 void SensorsModule::UserPose_PoseDetected(xn::PoseDetectionCapability& capability, XnChar const* strPose, XnUserID userId, void* pCookie)
 {
-    ROS_DEBUG("Pose detected for user: %d", userId);
+    if(DataStorage::GetInstance().GetPoseCooldownForUser(userId) <= 0)
+    {
+        DataStorage::GetInstance().PoseDetectedForUser(userId);
+        ROS_DEBUG("Pose detected for user: %d", userId);
+    }
+    else
+    {
+        ROS_DEBUG("Pose detected for user: %d, but ignored due to cooldown.", userId);
+    }
 }
-
 
 void SensorsModule::UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID userId, void* cookie)
 {
     ROS_DEBUG("Calibration start for user: %d", userId);
 }
 
-
 void SensorsModule::UserCalibration_CalibrationEnd(xn::SkeletonCapability& capability, XnUserID userId, XnBool success, void* cookie)
 {
-    if (success)
+    if(success)
     {
         ROS_DEBUG("Calibration successful for user: %d", userId);
         SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().StartTracking(userId);

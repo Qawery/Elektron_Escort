@@ -41,8 +41,10 @@ bool Initialization()
 
 void Update()
 {
-    DataStorage::GetInstance().UpdatePoseCooldowns(1.0f/mainLoopRate);
-    SensorsModule::GetInstance().Update();
+    SensorsModule::GetInstance().Update();                  //Pierwsze
+    //Identyfikacja
+    //Podążanie
+    DataStorage::GetInstance().Update(1.0f/mainLoopRate);   //Ostatnie
 }
 
 //TODO: usunąć

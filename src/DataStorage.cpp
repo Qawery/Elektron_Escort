@@ -16,7 +16,14 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
         _poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
     }
     SetPoseCooldownTime(_poseCooldownTime);
+    currentUserId = NO_USER_ID;
     return true;
+}
+
+void DataStorage::Update(float timeElapsed)
+{
+    UpdatePoseCooldowns(timeElapsed);
+    UpdatePoseDetected();
 }
 
 void DataStorage::UpdatePoseCooldowns(float timeElapsed)
@@ -31,6 +38,14 @@ void DataStorage::UpdatePoseCooldowns(float timeElapsed)
                 poseCooldownForUsers[i] = 0;
             }
         }
+    }
+}
+
+void DataStorage::UpdatePoseDetected()
+{
+    for(int i=0; i<maxUsers; ++i)
+    {
+        poseDetectedForUsers[i] = false;
     }
 }
 
@@ -58,9 +73,12 @@ void DataStorage::SetMaxUsers(int _maxUsers)
     }
     poseCooldownForUsers.clear();
     poseCooldownForUsers.resize(maxUsers);
+    poseDetectedForUsers.clear();
+    poseDetectedForUsers.resize(maxUsers);
     for(int i=0; i<maxUsers; ++i)
     {
         poseCooldownForUsers.push_back(0.0f);
+        poseDetectedForUsers.push_back(false);
     }
 }
 
@@ -84,12 +102,46 @@ void DataStorage::SetPoseCooldownTime(float _poseCooldownTime)
     }
 }
 
-float DataStorage::GetPoseCooldownForUser(int _userNumber)
+float DataStorage::GetPoseCooldownForUser(int userId)
 {
-    if(_userNumber < 0 || _userNumber >= poseCooldownForUsers.size())
+    if(userId < 0 || userId >= poseCooldownForUsers.size())
     {
-        ROS_WARN("Requested pose cooldown for invalid user: %d", _userNumber);
+        ROS_WARN("Requested pose cooldown for invalid user: %d", userId);
         return 0;
     }
-    return poseCooldownForUsers[_userNumber];
+    return poseCooldownForUsers[userId];
+}
+
+XnUserID DataStorage::GetCurrentUserId()
+{
+    return currentUserId;
+}
+
+void DataStorage::SetCurrentUserId(XnUserID _currentUserId)
+{
+    currentUserId = _currentUserId;
+}
+
+bool DataStorage::GetPoseDetectedForUser(int userId)
+{
+    if(userId < 0 || userId >= poseDetectedForUsers.size())
+    {
+        ROS_WARN("Requested pose detected for invalid user: %d", userId);
+        return false;
+    }
+    return poseDetectedForUsers[userId];
+}
+
+void DataStorage::PoseDetectedForUser(int userId)
+{
+    if(userId < 0 || userId >= poseDetectedForUsers.size())
+    {
+        ROS_WARN("Attempt to change pose detected for invalid user: %d", userId);
+        return;
+    }
+    else
+    {
+        poseDetectedForUsers[userId] = true;
+        poseCooldownForUsers[userId] = poseCooldownTime;
+    }
 }
