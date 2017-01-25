@@ -20,7 +20,6 @@ public:
 private:
     DataStorage* dataStorage;
     xn::Context context;
-    XnContext** contextPointer;
     xn::DepthGenerator depthGenerator;
     xn::UserGenerator userGenerator;
     XnCallbackHandle userCallbacksHandle;
