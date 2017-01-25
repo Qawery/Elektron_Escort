@@ -1,5 +1,7 @@
 #include "SensorsModule.h"
 
+bool SensorsModule::isCalibrationFilePresent;
+
 SensorsModule::SensorsModule(DataStorage *_dataStorage)
 {
     dataStorage = _dataStorage;
@@ -56,32 +58,8 @@ bool SensorsModule::Initialize()
     userGenerator.GetSkeletonCap().RegisterCalibrationCallbacks(UserCalibration_CalibrationStart, UserCalibration_CalibrationEnd, NULL, calibrationCallbacksHandle);
     userGenerator.GetPoseDetectionCap().RegisterToPoseCallbacks(this->UserPose_PoseDetected, NULL, NULL, poseCallbacksHandle);
     remove(DEFAULT_CALIBRATION_FILE_NAME);
-    isCalibrationFilePresent = false;
+    SetIsCalibrationFilePresent(false);
     return true;
-}
-
-void SensorsModule::User_NewUser(xn::UserGenerator& generator, XnUserID userId, void* cookie)
-{
-}
-
-
-void SensorsModule::User_LostUser(xn::UserGenerator& generator, XnUserID userId, void* cookie)
-{
-}
-
-
-void SensorsModule::UserPose_PoseDetected(xn::PoseDetectionCapability& capability, XnChar const* strPose, XnUserID userId, void* pCookie)
-{
-}
-
-
-void SensorsModule::UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID userId, void* cookie)
-{
-}
-
-
-void SensorsModule::UserCalibration_CalibrationEnd(xn::SkeletonCapability& capability, XnUserID userId, XnBool success, void* cookie)
-{
 }
 
 void SensorsModule::Update()
@@ -96,4 +74,44 @@ void SensorsModule::Finish()
     {
         remove(DEFAULT_CALIBRATION_FILE_NAME);
     }
+}
+
+bool SensorsModule::GetIsCalibrationFilePresent()
+{
+    return isCalibrationFilePresent;
+}
+
+void SensorsModule::SetIsCalibrationFilePresent(bool _isCalibrationfilePresent)
+{
+    isCalibrationFilePresent = _isCalibrationfilePresent;
+}
+
+
+void SensorsModule::User_NewUser(xn::UserGenerator& generator, XnUserID userId, void* cookie)
+{
+    ROS_DEBUG("New user: %d", userId);
+}
+
+
+void SensorsModule::User_LostUser(xn::UserGenerator& generator, XnUserID userId, void* cookie)
+{
+    ROS_DEBUG("Lost user: %d", userId);
+}
+
+
+void SensorsModule::UserPose_PoseDetected(xn::PoseDetectionCapability& capability, XnChar const* strPose, XnUserID userId, void* pCookie)
+{
+    ROS_DEBUG("Pose detected for user: %d", userId);
+}
+
+
+void SensorsModule::UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID userId, void* cookie)
+{
+    ROS_DEBUG("calibration start for user: %d", userId);
+}
+
+
+void SensorsModule::UserCalibration_CalibrationEnd(xn::SkeletonCapability& capability, XnUserID userId, XnBool success, void* cookie)
+{
+    ROS_DEBUG("Calibration end for user: %d", userId);
 }

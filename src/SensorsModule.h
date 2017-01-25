@@ -16,6 +16,8 @@ public:
     bool Initialize();
     void Update();
     void Finish();
+    static bool GetIsCalibrationFilePresent();
+    static void SetIsCalibrationFilePresent(bool _isCalibrationfilePresent);
 
 private:
     DataStorage* dataStorage;
@@ -27,8 +29,7 @@ private:
     XnCallbackHandle poseCallbacksHandle;
     XnBool isCalibrationPoseNeeded;
     XnChar startingPose[20];
-    bool isCalibrationFilePresent;
-
+    static bool isCalibrationFilePresent;
     static void User_NewUser(xn::UserGenerator& generator, XnUserID userId, void* cookie);
     static void User_LostUser(xn::UserGenerator& generator, XnUserID userId, void* cookie);
     static void UserPose_PoseDetected(xn::PoseDetectionCapability& capability, XnChar const* strPose, XnUserID userId, void* pCookie);

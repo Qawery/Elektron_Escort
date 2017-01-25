@@ -43,7 +43,7 @@ bool Initialization()
 	return true;
 }
 
-void UpdateSensorsData()
+void Update()
 {
     dataStorage->UpdatePoseCooldowns(1.0f/mainLoopRate);
     sensorsModule->Update();
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 		ros::Rate mainLoopRate(mainLoopRate);
 		while (ros::ok())
 		{
-            UpdateSensorsData();
+            Update();
             Debug();
 			mainLoopRate.sleep();
 		}
