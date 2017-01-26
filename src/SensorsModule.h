@@ -21,7 +21,6 @@ public:
     void Update();
     void Finish();
     bool GetIsCalibrationFilePresent();
-    void SetIsCalibrationFilePresent(bool _isCalibrationfilePresent);
     xn::UserGenerator GetUserGenerator();
 
 private:
@@ -36,7 +35,6 @@ private:
     XnCallbackHandle userCallbacksHandle;
     XnCallbackHandle calibrationCallbacksHandle;
     XnCallbackHandle poseCallbacksHandle;
-    XnBool isCalibrationPoseNeeded;
     XnChar startingPose[20];
     bool isCalibrationFilePresent;
 

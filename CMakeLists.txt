@@ -7,6 +7,9 @@ find_package(catkin REQUIRED COMPONENTS geometry_msgs
 					roscpp
 					roslib
 					tf)
+
+add_definitions("-std=gnu++11")
+
 # Find OpenNI
 find_package(PkgConfig)
 pkg_check_modules(OpenNI REQUIRED libopenni)

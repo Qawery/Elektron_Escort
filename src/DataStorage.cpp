@@ -2,146 +2,99 @@
 
 bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
 {
-    int _maxUsers;
-    if(!nodeHandlePrivate->getParam("maxUsers", _maxUsers))
+    if(!nodeHandlePrivate->getParam("maxUsers", maxUsers))
     {
         ROS_WARN("Value of maxUsers not found, using default: %d.", DEFAULT_MAX_USERS);
-        _maxUsers = DEFAULT_MAX_USERS;
+        maxUsers = DEFAULT_MAX_USERS;
     }
-    SetMaxUsers(_maxUsers);
-    double _poseCooldownTime;
-    if(!nodeHandlePrivate->getParam("poseCooldownTime", _poseCooldownTime))
+    if(maxUsers <= 0)
+    {
+        ROS_WARN("Requested invalid number of max users: %d", maxUsers);
+        maxUsers = 1;
+    }
+    poseCooldown.clear();
+    poseCooldown.resize(maxUsers);
+    currentPoseDetected.clear();
+    currentPoseDetected.resize(maxUsers);
+    newPoseDetected.clear();
+    newPoseDetected.resize(maxUsers);
+    for(int i=0; i<maxUsers; ++i)
+    {
+        poseCooldown.push_back(0.0f);
+        currentPoseDetected.push_back(false);
+        newPoseDetected.push_back(false);
+    }
+    if(!nodeHandlePrivate->getParam("poseCooldownTime", poseCooldownTime))
     {
         ROS_WARN("Value of poseCooldownTime not found, using default: %d.", DEFAULT_POSE_COOLDOWN_TIME);
-        _poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
+        poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
     }
-    SetPoseCooldownTime(_poseCooldownTime);
-    currentUserId = NO_USER_ID;
+    if(poseCooldownTime < 0)
+    {
+        ROS_WARN("Requested negative time of pose cooldown: %d", poseCooldownTime);
+        poseCooldownTime = 0.0f;
+    }
     return true;
 }
 
 void DataStorage::Update(float timeElapsed)
 {
+    CopyNewData();
     UpdatePoseCooldowns(timeElapsed);
-    UpdatePoseDetected();
+}
+
+void DataStorage::CopyNewData()
+{
+    for(int i=0; i<currentPoseDetected.size(); ++i)
+    {
+        currentPoseDetected[i] = false;
+    }
+    newDataMutex.lock();
+    for(int i=0; i<newPoseDetected.size(); ++i)
+    {
+        if(newPoseDetected[i])
+        {
+            if(poseCooldown[i] <= 0)
+            {
+                currentPoseDetected[i] = true;
+                poseCooldown[i] = poseCooldownTime;
+                newPoseDetected[i] = false;
+            }
+            else
+            {
+                ROS_DEBUG("Pose of user %d ignored due to cooldown.", i);
+            }
+        }
+    }
+    newDataMutex.unlock();
 }
 
 void DataStorage::UpdatePoseCooldowns(float timeElapsed)
 {
     for(int i=0; i<maxUsers; ++i)
     {
-        if(poseCooldownForUsers[i] > 0)
+        if(poseCooldown[i] > 0)
         {
-            poseCooldownForUsers[i] -= timeElapsed;
-            if(poseCooldownForUsers[i] < 0)
+            poseCooldown[i] -= timeElapsed;
+            if(poseCooldown[i] < 0)
             {
-                poseCooldownForUsers[i] = 0;
+                poseCooldown[i] = 0;
             }
         }
     }
 }
 
-void DataStorage::UpdatePoseDetected()
-{
-    for(int i=0; i<maxUsers; ++i)
-    {
-        poseDetectedForUsers[i] = false;
-    }
-}
-
-int DataStorage::GetMaxUsers()
-{
-    return maxUsers;
-}
-
-void DataStorage::SetMaxUsers(int _maxUsers)
-{
-    if(poseCooldownForUsers.max_size() < _maxUsers)
-    {
-        maxUsers = poseCooldownForUsers.max_size();
-        ROS_WARN("Requested too large number of max users: %d. Available number: %d", _maxUsers, maxUsers);
-    }
-    else if(_maxUsers <= 0)
-    {
-        ROS_ERROR("Requested invalid number of max users: %d", _maxUsers);
-        //TODO: wywalenie programu
-        maxUsers = 1;
-    }
-    else
-    {
-        maxUsers = _maxUsers;
-    }
-    poseCooldownForUsers.clear();
-    poseCooldownForUsers.resize(maxUsers);
-    poseDetectedForUsers.clear();
-    poseDetectedForUsers.resize(maxUsers);
-    for(int i=0; i<maxUsers; ++i)
-    {
-        poseCooldownForUsers.push_back(0.0f);
-        poseDetectedForUsers.push_back(false);
-    }
-}
-
-void DataStorage::SetPoseCooldownTime(float _poseCooldownTime)
-{
-    if(_poseCooldownTime < 0)
-    {
-        ROS_WARN("Requested negative value of pose cooldown time: %f", _poseCooldownTime);
-        poseCooldownTime = 0;
-    }
-    else
-    {
-        poseCooldownTime = _poseCooldownTime;
-    }
-    for(int i=0; i<maxUsers; ++i)
-    {
-        if(poseCooldownForUsers[i] > poseCooldownTime)
-        {
-            poseCooldownForUsers[i] = poseCooldownTime;
-        }
-    }
-}
-
-float DataStorage::GetPoseCooldownForUser(int userId)
-{
-    if(userId < 0 || userId >= poseCooldownForUsers.size())
-    {
-        ROS_WARN("Requested pose cooldown for invalid user: %d", userId);
-        return 0;
-    }
-    return poseCooldownForUsers[userId];
-}
-
-XnUserID DataStorage::GetCurrentUserId()
-{
-    return currentUserId;
-}
-
-void DataStorage::SetCurrentUserId(XnUserID _currentUserId)
-{
-    currentUserId = _currentUserId;
-}
-
-bool DataStorage::GetPoseDetectedForUser(int userId)
-{
-    if(userId < 0 || userId >= poseDetectedForUsers.size())
-    {
-        ROS_WARN("Requested pose detected for invalid user: %d", userId);
-        return false;
-    }
-    return poseDetectedForUsers[userId];
-}
-
 void DataStorage::PoseDetectedForUser(int userId)
 {
-    if(userId < 0 || userId >= poseDetectedForUsers.size())
+    newDataMutex.lock();
+    if(userId < 0 || userId >= newPoseDetected.size())
     {
         ROS_WARN("Attempt to change pose detected for invalid user: %d", userId);
         return;
     }
     else
     {
-        poseDetectedForUsers[userId] = true;
-        poseCooldownForUsers[userId] = poseCooldownTime;
+        newPoseDetected[userId] = true;
     }
+    newDataMutex.unlock();
 }

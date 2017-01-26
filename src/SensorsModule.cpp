@@ -32,7 +32,6 @@ bool SensorsModule::Initialize()
     }
     if (userGenerator.GetSkeletonCap().NeedPoseForCalibration())
     {
-        isCalibrationPoseNeeded = TRUE;
         if (!userGenerator.IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION))
         {
             ROS_INFO("Calibration pose required, but not supported");
@@ -74,11 +73,6 @@ bool SensorsModule::GetIsCalibrationFilePresent()
     return isCalibrationFilePresent;
 }
 
-void SensorsModule::SetIsCalibrationFilePresent(bool _isCalibrationfilePresent)
-{
-    isCalibrationFilePresent = _isCalibrationfilePresent;
-}
-
 xn::UserGenerator SensorsModule::GetUserGenerator()
 {
     return userGenerator;
@@ -103,15 +97,8 @@ void SensorsModule::User_LostUser(xn::UserGenerator& generator, XnUserID userId,
 
 void SensorsModule::UserPose_PoseDetected(xn::PoseDetectionCapability& capability, XnChar const* strPose, XnUserID userId, void* pCookie)
 {
-    if(DataStorage::GetInstance().GetPoseCooldownForUser(userId) <= 0)
-    {
-        DataStorage::GetInstance().PoseDetectedForUser(userId);
-        ROS_DEBUG("Pose detected for user: %d", userId);
-    }
-    else
-    {
-        ROS_DEBUG("Pose detected for user: %d, but ignored due to cooldown.", userId);
-    }
+    DataStorage::GetInstance().PoseDetectedForUser(userId);
+    ROS_DEBUG("Pose detected for user: %d", userId);
 }
 
 void SensorsModule::UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID userId, void* cookie)
