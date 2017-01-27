@@ -294,6 +294,7 @@ void SensorsModule::UserCalibration_CalibrationEnd(xn::SkeletonCapability& capab
             {
                 ROS_DEBUG("User: %d- saved calibration file", userId);
             }
+            //TODO: rozpoczęcie śledzenia
         }
         SensorsModule::GetInstance().UnLockCalibrationMutex();
     }
