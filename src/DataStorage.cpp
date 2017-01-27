@@ -1,37 +1,76 @@
 #include "DataStorage.h"
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Public methods
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
 {
+    int _logLevel;
+    if(!nodeHandlePrivate->getParam("dataStorageLogLevel", _logLevel))
+    {
+        ROS_WARN("dataStorageLogLevel not found, using default");
+        logLevel = DEFAULT_DATA_STORAGE_LOG_LEVEL;
+    }
+    else
+    {
+        switch (_logLevel)
+        {
+            case 0:
+                logLevel = Debug;
+                break;
+            case 1:
+                logLevel = Info;
+                break;
+            case 2:
+                logLevel = Warn;
+                break;
+            case 3:
+                logLevel = Error;
+                break;
+            default:
+                ROS_WARN("Requested invalid dataStorageLogLevel, using default");
+                logLevel = DEFAULT_DATA_STORAGE_LOG_LEVEL;
+                break;
+        }
+    }
     if(!nodeHandlePrivate->getParam("maxUsers", maxUsers))
     {
-        ROS_WARN("Value of maxUsers not found, using default: %d.", DEFAULT_MAX_USERS);
+        if(logLevel <= Warn)
+        {
+            ROS_WARN("Value of maxUsers not found, using default: %d", DEFAULT_MAX_USERS);
+        }
         maxUsers = DEFAULT_MAX_USERS;
     }
     if(maxUsers <= 0)
     {
-        ROS_WARN("Requested invalid number of max users: %d", maxUsers);
+        if(logLevel <= Warn)
+        {
+            ROS_WARN("Requested invalid number of max users: %d", maxUsers);
+        }
         maxUsers = 1;
     }
-    poseCooldown.clear();
     poseCooldown.resize(maxUsers);
-    currentPoseDetected.clear();
-    currentPoseDetected.resize(maxUsers);
-    newPoseDetected.clear();
-    newPoseDetected.resize(maxUsers);
+    poseDetected.resize(maxUsers);
     for(int i=0; i<maxUsers; ++i)
     {
         poseCooldown.push_back(0.0f);
-        currentPoseDetected.push_back(false);
-        newPoseDetected.push_back(false);
+        poseDetected.push_back(false);
     }
     if(!nodeHandlePrivate->getParam("poseCooldownTime", poseCooldownTime))
     {
-        ROS_WARN("Value of poseCooldownTime not found, using default: %d.", DEFAULT_POSE_COOLDOWN_TIME);
+        if(logLevel <= Warn)
+        {
+            ROS_WARN("Value of poseCooldownTime not found, using default: %d", DEFAULT_POSE_COOLDOWN_TIME);
+        }
         poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
     }
-    if(poseCooldownTime < 0)
+    if(poseCooldownTime < 0.0f)
     {
-        ROS_WARN("Requested negative time of pose cooldown: %d", poseCooldownTime);
+        if(logLevel <= Warn)
+        {
+            ROS_WARN("Requested negative time of pose cooldown: %d", poseCooldownTime);
+        }
         poseCooldownTime = 0.0f;
     }
     return true;
@@ -39,62 +78,60 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
 
 void DataStorage::Update(float timeElapsed)
 {
-    CopyNewData();
     UpdatePoseCooldowns(timeElapsed);
-}
-
-void DataStorage::CopyNewData()
-{
-    for(int i=0; i<currentPoseDetected.size(); ++i)
-    {
-        currentPoseDetected[i] = false;
-    }
-    newDataMutex.lock();
-    for(int i=0; i<newPoseDetected.size(); ++i)
-    {
-        if(newPoseDetected[i])
-        {
-            if(poseCooldown[i] <= 0)
-            {
-                currentPoseDetected[i] = true;
-                poseCooldown[i] = poseCooldownTime;
-                newPoseDetected[i] = false;
-            }
-            else
-            {
-                ROS_DEBUG("Pose of user %d ignored due to cooldown.", i);
-            }
-        }
-    }
-    newDataMutex.unlock();
 }
 
 void DataStorage::UpdatePoseCooldowns(float timeElapsed)
 {
     for(int i=0; i<maxUsers; ++i)
     {
-        if(poseCooldown[i] > 0)
+        if(poseCooldown[i] > 0.0f)
         {
             poseCooldown[i] -= timeElapsed;
-            if(poseCooldown[i] < 0)
+            if(poseCooldown[i] < 0.0f)
             {
-                poseCooldown[i] = 0;
+                poseCooldown[i] = 0.0f;
             }
         }
     }
 }
 
-void DataStorage::PoseDetectedForUser(int userId)
+void DataStorage::PoseDetectedForUser(XnUserID userId)
 {
-    newDataMutex.lock();
-    if(userId < 0 || userId >= newPoseDetected.size())
+    if(userId < 0 || userId >= poseDetected.size())
     {
-        ROS_WARN("Attempt to change pose detected for invalid user: %d", userId);
+        if(logLevel <= Warn)
+        {
+            ROS_WARN("Attempt to change pose detected for invalid user: %d", userId);
+        }
         return;
     }
     else
     {
-        newPoseDetected[userId] = true;
+        if(poseCooldown[userId] > 0.0f)
+        {
+            if(logLevel <= Debug)
+            {
+                ROS_DEBUG("Pose detected for user %d, but ignored due to cooldown", userId);
+            }
+        }
+        else
+        {
+            poseDetected[userId] = true;
+            if(logLevel <= Debug)
+            {
+                ROS_DEBUG("Pose detected for user %d", userId);
+            }
+        }
     }
-    newDataMutex.unlock();
 }
+
+int DataStorage::GetMaxUsers()
+{
+    return maxUsers;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Private methods
+///////////////////////////////////////////////////////////////////////////////////////////////////////////

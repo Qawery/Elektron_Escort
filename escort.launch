@@ -2,9 +2,19 @@
 	<master auto="start"/>
 	<node pkg="elektron_escort" type="escort_main" respawn="false" name="escort_main" output="screen">
 
+        <param name="escortMainLogLevel" type="int" value="0"/>
 		<param name="mainLoopRate" type="double" value="30.0"/>
-		<param name="maxUsers" type="int" value="10"/>
+
+		<param name="dataStorageLogLevel" type="int" value="0"/>
+		<param name="maxUsers" type="int" value="3"/>
 		<param name="poseCooldownTime" type="double" value="3.0"/>
+
+        <param name="sensorsModuleLogLevel" type="int" value="0"/>
+
+        <param name="identificationModuleLogLevel" type="int" value="0"/>
+
+        <param name="locomotionModuleLogLevel" type="int" value="0"/>
+
 
 	</node>
 </launch>

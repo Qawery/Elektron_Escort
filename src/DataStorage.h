@@ -1,10 +1,14 @@
 #ifndef ELEKTRON_ESCORT_DATASTORAGE_H
 #define ELEKTRON_ESCORT_DATASTORAGE_H
 
+#define DEFAULT_DATA_STORAGE_LOG_LEVEL Debug
+#define DEFAULT_MAX_USERS 3
+#define DEFAULT_POSE_COOLDOWN_TIME 3
+
 #include <mutex>
 #include <ros/ros.h>
 #include <XnOpenNI.h>
-#include "DefaultValues.h"
+#include "Common.h"
 
 class DataStorage
 {
@@ -16,23 +20,21 @@ public:
     }
     bool Initialize(ros::NodeHandle* nodeHandlePrivate);
     void Update(float timeElapsed);
-    void PoseDetectedForUser(int userId);
+    void PoseDetectedForUser(XnUserID userId);
+    int GetMaxUsers();
 
 private:
+    LogLevels logLevel;
+    int maxUsers;
+    float poseCooldownTime;
+    std::vector<float> poseCooldown;
+    std::vector<bool> poseDetected;
+
     DataStorage() {}
     DataStorage(const DataStorage &);
     DataStorage& operator=(const DataStorage&);
     ~DataStorage() {}
-    void CopyNewData();
     void UpdatePoseCooldowns(float timeElapsed);
-    void UpdatePoseDetected();
-
-    int maxUsers;
-    float poseCooldownTime;
-    std::mutex newDataMutex;
-    std::vector<float> poseCooldown;
-    std::vector<bool> currentPoseDetected;
-    std::vector<bool> newPoseDetected;
 };
 
 #endif //ELEKTRON_ESCORT_DATASTORAGE_H
