@@ -7,12 +7,14 @@
 
 #include <mutex>
 #include <ros/ros.h>
-#include <XnOpenNI.h>
+#include <XnCppWrapper.h>
 #include "Common.h"
+
 
 class DataStorage
 {
 public:
+    //System functions
     static DataStorage& GetInstance()
     {
         static DataStorage instance;
@@ -20,21 +22,32 @@ public:
     }
     bool Initialize(ros::NodeHandle* nodeHandlePrivate);
     void Update(float timeElapsed);
-    void PoseDetectedForUser(XnUserID userId);
     int GetMaxUsers();
 
+    //Task functions
+    void PoseDetectedForUser(int userId);
+    XnUserID GetUserId();
+    void SetUserId(XnUserID newUserId);
+
 private:
+    //System fields
     LogLevels logLevel;
     int maxUsers;
     float poseCooldownTime;
-    std::vector<float> poseCooldown;
-    std::vector<bool> poseDetected;
 
+    //Task fields
+    std::vector<bool> poseDetected;
+    std::vector<float> poseCooldown;
+
+    //System functions
     DataStorage() {}
     DataStorage(const DataStorage &);
     DataStorage& operator=(const DataStorage&);
     ~DataStorage() {}
-    void UpdatePoseCooldowns(float timeElapsed);
+    void UpdatePoseData(float timeElapsed);
+
+    //Task functions
+    //...
 };
 
 #endif //ELEKTRON_ESCORT_DATASTORAGE_H

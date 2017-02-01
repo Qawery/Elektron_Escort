@@ -2,7 +2,9 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Public methods
+//Public
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//System functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
 {
@@ -69,7 +71,7 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
     {
         if(logLevel <= Warn)
         {
-            ROS_WARN("Requested negative time of pose cooldown: %d", poseCooldownTime);
+            ROS_WARN("Requested negative time of pose cooldown: %f", poseCooldownTime);
         }
         poseCooldownTime = 0.0f;
     }
@@ -78,25 +80,19 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate)
 
 void DataStorage::Update(float timeElapsed)
 {
-    UpdatePoseCooldowns(timeElapsed);
+    UpdatePoseData(timeElapsed);
 }
 
-void DataStorage::UpdatePoseCooldowns(float timeElapsed)
+int DataStorage::GetMaxUsers()
 {
-    for(int i=0; i<maxUsers; ++i)
-    {
-        if(poseCooldown[i] > 0.0f)
-        {
-            poseCooldown[i] -= timeElapsed;
-            if(poseCooldown[i] < 0.0f)
-            {
-                poseCooldown[i] = 0.0f;
-            }
-        }
-    }
+    return maxUsers;
 }
 
-void DataStorage::PoseDetectedForUser(XnUserID userId)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Task functions
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+void DataStorage::PoseDetectedForUser(int userId)
 {
     if(userId < 0 || userId >= poseDetected.size())
     {
@@ -126,12 +122,30 @@ void DataStorage::PoseDetectedForUser(XnUserID userId)
     }
 }
 
-int DataStorage::GetMaxUsers()
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Private
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//System functions
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+void DataStorage::UpdatePoseData(float timeElapsed)
 {
-    return maxUsers;
+    for(int i=0; i<maxUsers; ++i)
+    {
+        if(poseCooldown[i] > 0.0f)
+        {
+            poseCooldown[i] -= timeElapsed;
+            if(poseCooldown[i] < 0.0f)
+            {
+                poseCooldown[i] = 0.0f;
+            }
+        }
+        poseDetected[i] = false;
+    }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Private methods
+//Task functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//...

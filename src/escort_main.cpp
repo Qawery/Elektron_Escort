@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include "Common.h"
+#include "TaskModule.h"
 #include "DataStorage.h"
 #include "SensorsModule.h"
 
@@ -12,10 +13,8 @@ ros::NodeHandle* nodeHandlePublic;
 ros::NodeHandle* nodeHandlePrivate;
 double mainLoopRate;
 
-
 bool Initialization()
 {
-	//ROS and program initialization
 	nodeHandlePublic = new ros::NodeHandle();
 	nodeHandlePrivate = new ros::NodeHandle("~");
     if(ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) )
@@ -88,20 +87,32 @@ bool Initialization()
         }
         return false;
     }
+    if(TaskModule::GetInstance().Initialize(nodeHandlePrivate))
+    {
+        if(logLevel <= Debug)
+        {
+            ROS_DEBUG("Task module initialized successfully.");
+        }
+    }
+    else
+    {
+        if(logLevel <= Error)
+        {
+            ROS_ERROR("Failed to initialize task module.");
+        }
+        return false;
+    }
 	return true;
 }
 
 void Update()
 {
-    SensorsModule::GetInstance().Update();                  //Pierwsze
-    //Identyfikacja
-    //Podążanie
-    DataStorage::GetInstance().Update(1.0f/mainLoopRate);   //Ostatnie
-}
-
-//TODO: usunąć
-void DebugInfo()
-{
+    //TODO: topic module update
+    SensorsModule::GetInstance().Update();
+    //TODO: identification module update
+    TaskModule::GetInstance().Update();
+    //TODO: drive module update
+    DataStorage::GetInstance().Update(1/mainLoopRate);
 }
 
 void Finish()
@@ -124,7 +135,6 @@ int main(int argc, char **argv)
 		while (ros::ok())
 		{
             Update();
-            DebugInfo();
 			mainLoopRate.sleep();
 		}
 	}
