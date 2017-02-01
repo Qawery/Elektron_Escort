@@ -23,7 +23,7 @@ include_directories(${catkin_INCLUDEDIR}
 link_directories(${catkin_LIBRARY_DIRS})
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
-add_executable(escort_main src/escort_main.cpp src/TaskModule.cpp src/DataStorage.cpp src/SensorsModule.cpp)
+add_executable(escort_main src/escort_main.cpp src/TaskModule.cpp src/DataStorage.cpp src/SensorsModule.cpp src/MobilityModule.cpp src/MobilityModule.h)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
 				     ${OpenNI_LIBRARIES}

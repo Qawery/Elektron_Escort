@@ -18,7 +18,6 @@ public:
         static TaskModule instance;
         return instance;
     }
-
     bool Initialize(ros::NodeHandle *nodeHandlePrivate);
     void Update();
 
@@ -30,6 +29,7 @@ private:
     LogLevels logLevel;
 
     //Task fields
+    TaskState state;
 
     //System functions
     TaskModule() {}

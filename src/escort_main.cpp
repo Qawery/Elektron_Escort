@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "SensorsModule.h"
 #include "TaskModule.h"
+#include "MobilityModule.h"
 #include "DataStorage.h"
 
 #define DEFAULT_ESCORT_MAIN_LOG_LEVEL Debug
@@ -87,7 +88,22 @@ bool Initialization()
         }
         return false;
     }
-    //TODO: pozostała inicjalizacja
+    //TODO: inicjalizacja identyfikacji
+    if(MobilityModule::GetInstance().Initialize(nodeHandlePrivate))
+    {
+        if(logLevel <= Debug)
+        {
+            ROS_DEBUG("Mobility module initialized successfully.");
+        }
+    }
+    else
+    {
+        if(logLevel <= Error)
+        {
+            ROS_ERROR("Failed to initialize mobility module.");
+        }
+        return false;
+    }
     if(TaskModule::GetInstance().Initialize(nodeHandlePrivate))
     {
         if(logLevel <= Debug)
@@ -112,7 +128,7 @@ void Update()
     SensorsModule::GetInstance().Update();
     //TODO: identification module update
     TaskModule::GetInstance().Update();
-    //TODO: drive module update
+    MobilityModule::GetInstance().Update();
     DataStorage::GetInstance().Update(1/mainLoopRate);
 }
 

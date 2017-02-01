@@ -1,4 +1,3 @@
-#include "TaskModule.h"
 #include "MobilityModule.h"
 
 
@@ -7,13 +6,13 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //System functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate)
+bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePrivate)
 {
     int _logLevel;
-    if(!nodeHandlePrivate->getParam("taskModuleLogLevel", _logLevel))
+    if(!nodeHandlePrivate->getParam("mobilityModuleLogLevel", _logLevel))
     {
-        ROS_WARN("taskModuleLogLevel not found, using default");
-        logLevel = DEFAULT_TASK_MODULE_LOG_LEVEL;
+        ROS_WARN("mobilityModuleLogLevel not found, using default");
+        logLevel = DEFAULT_MOBILITY_MODULE_LOG_LEVEL;
     }
     else
     {
@@ -32,34 +31,44 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate)
                 logLevel = Error;
                 break;
             default:
-                ROS_WARN("Requested invalid taskModuleLogLevel, using default");
-                logLevel = DEFAULT_TASK_MODULE_LOG_LEVEL;
+                ROS_WARN("Requested invalid mobilityModuleLogLevel, using default");
+                logLevel = DEFAULT_MOBILITY_MODULE_LOG_LEVEL;
                 break;
         }
     }
-    state = Awaiting;
-    SensorsModule::GetInstance().ChangeStateTo(Calibrating);
-    return true;
+    //TODO: inicjalizacja topica cmd_vel
 }
 
-void TaskModule::Update()
+void MobilityModule::Update()
 {
+    switch (state)
+    {
+        case Stop:
+            //TODO: zatrzymanie robota
+            break;
+
+        case FollowUser:
+            //TODO: utrzymanie odległości
+            break;
+
+        case SearchForUser:
+            //TODO: obrót w lewo
+            break;
+    }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Task functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TaskModule::CalibrationCompleted(XnUserID newUserId)
+void MobilityModule::SetState(DrivesState newState)
 {
-    DataStorage::GetInstance().SetUserId(newUserId);
-    //TODO: zapisz wzorzec
+    state = newState;
+    Update();
     if(logLevel <= Debug)
     {
-        ROS_DEBUG("Begin following user: %d", newUserId);
+        ROS_DEBUG("New mobility state: %d", newState);
     }
-    state = Following;
-    MobilityModule::GetInstance().SetState(FollowUser);
 }
 
 

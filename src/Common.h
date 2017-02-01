@@ -16,4 +16,9 @@ enum SensorsState
     Off, Calibrating, Working
 };
 
+enum DrivesState
+{
+    Stop, FollowUser, SearchForUser
+};
+
 #endif //ELEKTRON_ESCORT_COMMON_H
