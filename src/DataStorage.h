@@ -38,6 +38,7 @@ private:
     //Task fields
     std::vector<bool> poseDetected;
     std::vector<float> poseCooldown;
+    XnUserID userId;
 
     //System functions
     DataStorage() {}

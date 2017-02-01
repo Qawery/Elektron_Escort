@@ -122,6 +122,16 @@ void DataStorage::PoseDetectedForUser(int userId)
     }
 }
 
+XnUserID DataStorage::GetUserId()
+{
+    return userId;
+}
+
+void DataStorage::SetUserId(XnUserID newUserId)
+{
+    userId = newUserId;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private

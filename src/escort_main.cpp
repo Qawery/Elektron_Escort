@@ -1,9 +1,9 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include "Common.h"
+#include "SensorsModule.h"
 #include "TaskModule.h"
 #include "DataStorage.h"
-#include "SensorsModule.h"
 
 #define DEFAULT_ESCORT_MAIN_LOG_LEVEL Debug
 #define DEFAULT_MAIN_LOOP_RATE 30
@@ -87,6 +87,7 @@ bool Initialization()
         }
         return false;
     }
+    //TODO: pozostała inicjalizacja
     if(TaskModule::GetInstance().Initialize(nodeHandlePrivate))
     {
         if(logLevel <= Debug)

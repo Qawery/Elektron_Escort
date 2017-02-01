@@ -36,6 +36,9 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate)
                 break;
         }
     }
+
+    SensorsModule::GetInstance().ChangeStateTo(Calibrating);
+    return true;
 }
 
 void TaskModule::Update()
