@@ -2,6 +2,7 @@
 #define ELEKTRON_ESCORT_SENSORSMODULE_H
 
 #define DEFAULT_SENSORS_MODULE_LOG_LEVEL Debug
+#define CALIBRATION_POSE "psi"
 #define CALIBRATION_SLOT 0
 
 #include <mutex>

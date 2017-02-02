@@ -44,6 +44,10 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate)
 
 void TaskModule::Update()
 {
+    /*
+     * TODO:
+     * Maszyna stanów z przejściami
+     */
 }
 
 
@@ -52,7 +56,7 @@ void TaskModule::Update()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TaskModule::CalibrationCompleted(XnUserID newUserId)
 {
-    DataStorage::GetInstance().SetUserId(newUserId);
+    DataStorage::GetInstance().SetCurrentUserXnId(newUserId);
     //TODO: zapisz wzorzec
     if(logLevel <= Debug)
     {

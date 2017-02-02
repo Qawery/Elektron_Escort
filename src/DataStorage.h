@@ -25,9 +25,11 @@ public:
     int GetMaxUsers();
 
     //Task functions
+    XnUserID GetCurrentUserXnId();
+    void SetCurrentUserXnId(XnUserID newCurrentUserXnId);
     void PoseDetectedForUser(int userId);
-    XnUserID GetUserId();
-    void SetUserId(XnUserID newUserId);
+    void SetCenterOfMassLocationForUser(int userId, XnPoint3D CoMLocation);
+    XnPoint3D GetCenterOfMassLocationForUser(int userId);
 
 private:
     //System fields
@@ -36,9 +38,10 @@ private:
     float poseCooldownTime;
 
     //Task fields
+    XnUserID currentUserXnId;
     std::vector<bool> poseDetected;
     std::vector<float> poseCooldown;
-    XnUserID userId;
+    std::vector<XnPoint3D> centerOfMassLocation;
 
     //System functions
     DataStorage() {}
@@ -46,6 +49,7 @@ private:
     DataStorage& operator=(const DataStorage&);
     ~DataStorage() {}
     void UpdatePoseData(float timeElapsed);
+    void ClearCenterOfMasses();
 
     //Task functions
     //...

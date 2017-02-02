@@ -109,6 +109,7 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate)
 void SensorsModule::Update()
 {
     context.WaitAndUpdateAll();
+    //context.WaitAnyUpdateAll();
     SendNewDataToStorage();
     XnUInt16 numberOfUsers = userGenerator.GetNumberOfUsers();
     XnUserID userIds[numberOfUsers];
@@ -116,6 +117,9 @@ void SensorsModule::Update()
     for(int i=0; i < numberOfUsers; ++i)
     {
         //TODO: wyślij dane o użytkownikach do DataStorage
+        XnPoint3D centerOfMass;
+        userGenerator.GetCoM(userIds[i], centerOfMass);
+
     }
 }
 
@@ -229,14 +233,14 @@ void SensorsModule::EnterState(SensorsState state)
         case Calibrating:
             for(int i=0; i < numberOfUsers; ++i)
             {
-                userGenerator.GetPoseDetectionCap().StartPoseDetection("psi", userIds[i]);
+                userGenerator.GetPoseDetectionCap().StartPoseDetection(CALIBRATION_POSE, userIds[i]);
             }
             break;
 
         case Working:
             for(int i=0; i < numberOfUsers; ++i)
             {
-                userGenerator.GetPoseDetectionCap().StartPoseDetection("psi", userIds[i]);
+                userGenerator.GetPoseDetectionCap().StartPoseDetection(CALIBRATION_POSE, userIds[i]);
                 userGenerator.GetSkeletonCap().LoadCalibrationData(userIds[i], CALIBRATION_SLOT);
                 userGenerator.GetSkeletonCap().StartTracking(userIds[i]);
             }
@@ -293,7 +297,7 @@ void SensorsModule::User_NewUser(xn::UserGenerator& generator, XnUserID userId, 
     }
     if (SensorsModule::GetInstance().GetState() != Off)
     {
-        generator.GetPoseDetectionCap().StartPoseDetection("Psi", userId);
+        generator.GetPoseDetectionCap().StartPoseDetection(CALIBRATION_POSE, userId);
         if(SensorsModule::GetInstance().GetState() == Working)
         {
             SensorsModule::GetInstance().LoadCalibrationDataForUser(userId);

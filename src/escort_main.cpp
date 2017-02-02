@@ -13,6 +13,7 @@ LogLevels logLevel;
 ros::NodeHandle* nodeHandlePublic;
 ros::NodeHandle* nodeHandlePrivate;
 double mainLoopRate;
+double mainLoopTime;
 
 bool Initialization()
 {
@@ -58,6 +59,7 @@ bool Initialization()
         }
         mainLoopRate = DEFAULT_MAIN_LOOP_RATE;
     }
+    mainLoopTime = 1/mainLoopRate;
     if(DataStorage::GetInstance().Initialize(nodeHandlePrivate))
     {
         if(logLevel <= Debug)
@@ -89,7 +91,7 @@ bool Initialization()
         return false;
     }
     //TODO: inicjalizacja identyfikacji
-    if(MobilityModule::GetInstance().Initialize(nodeHandlePrivate))
+    if(MobilityModule::GetInstance().Initialize(nodeHandlePublic, nodeHandlePrivate))
     {
         if(logLevel <= Debug)
         {
@@ -129,7 +131,14 @@ void Update()
     //TODO: identification module update
     TaskModule::GetInstance().Update();
     MobilityModule::GetInstance().Update();
-    DataStorage::GetInstance().Update(1/mainLoopRate);
+
+    //DEBUG
+    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER)
+    {
+        XnPoint3D position = DataStorage::GetInstance().GetCenterOfMassLocationForUser(DataStorage::GetInstance().GetCurrentUserXnId()-1);
+        ROS_INFO("X: %f, Y: %f, Z: %f" ,position.X, position.Y, position.Z);
+    }
+    DataStorage::GetInstance().Update(mainLoopTime);
 }
 
 void Finish()

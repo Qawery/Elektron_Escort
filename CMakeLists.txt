@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(elektron_escort)
 
 find_package(orocos_kdl REQUIRED)
-find_package(catkin REQUIRED COMPONENTS geometry_msgs
+find_package(catkin REQUIRED COMPONENTS
+					geometry_msgs
 					roscpp
 					roslib
 					tf)
@@ -23,7 +24,7 @@ include_directories(${catkin_INCLUDEDIR}
 link_directories(${catkin_LIBRARY_DIRS})
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
-add_executable(escort_main src/escort_main.cpp src/TaskModule.cpp src/DataStorage.cpp src/SensorsModule.cpp src/MobilityModule.cpp src/MobilityModule.h)
+add_executable(escort_main src/escort_main.cpp src/TaskModule.cpp src/DataStorage.cpp src/SensorsModule.cpp src/MobilityModule.cpp)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
 				     ${OpenNI_LIBRARIES}
