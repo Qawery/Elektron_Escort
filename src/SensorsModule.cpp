@@ -108,8 +108,7 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate)
 
 void SensorsModule::Update()
 {
-    context.WaitAndUpdateAll();
-    //context.WaitAnyUpdateAll();
+    context.WaitAnyUpdateAll();
     SendNewDataToStorage();
     XnUInt16 numberOfUsers = userGenerator.GetNumberOfUsers();
     XnUserID userIds[numberOfUsers];
@@ -119,7 +118,7 @@ void SensorsModule::Update()
         //TODO: wyślij dane o użytkownikach do DataStorage
         XnPoint3D centerOfMass;
         userGenerator.GetCoM(userIds[i], centerOfMass);
-
+        DataStorage::GetInstance().SetCenterOfMassLocationForUser(userIds[i]-1, centerOfMass);
     }
 }
 

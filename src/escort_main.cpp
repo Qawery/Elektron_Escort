@@ -131,13 +131,6 @@ void Update()
     //TODO: identification module update
     TaskModule::GetInstance().Update();
     MobilityModule::GetInstance().Update();
-
-    //DEBUG
-    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER)
-    {
-        XnPoint3D position = DataStorage::GetInstance().GetCenterOfMassLocationForUser(DataStorage::GetInstance().GetCurrentUserXnId()-1);
-        ROS_INFO("X: %f, Y: %f, Z: %f" ,position.X, position.Y, position.Z);
-    }
     DataStorage::GetInstance().Update(mainLoopTime);
 }
 
