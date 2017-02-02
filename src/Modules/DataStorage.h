@@ -8,7 +8,7 @@
 #include <mutex>
 #include <ros/ros.h>
 #include <XnCppWrapper.h>
-#include "Common.h"
+#include "../Common.h"
 
 
 class DataStorage {

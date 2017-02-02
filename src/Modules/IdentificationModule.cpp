@@ -35,6 +35,11 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
     return true;
 }
 
+void IdentificationModule::Update()
+{
+
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Task functions

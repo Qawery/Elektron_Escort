@@ -25,11 +25,11 @@ link_directories(${catkin_LIBRARY_DIRS})
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 add_executable(escort_main src/escort_main.cpp
-        src/SensorsModule.cpp
-        src/TaskModule.cpp
-        src/MobilityModule.cpp
-        src/DataStorage.cpp
-        src/IdentificationModule.cpp)
+        src/Modules/SensorsModule.cpp
+        src/Modules/TaskModule.cpp
+        src/Modules/MobilityModule.cpp
+        src/Modules/DataStorage.cpp
+        src/Modules/IdentificationModule.cpp)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
 				     ${OpenNI_LIBRARIES}

@@ -6,7 +6,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <XnCppWrapper.h>
-#include "Common.h"
+#include "../Common.h"
 #include "SensorsModule.h"
 #include "DataStorage.h"
 

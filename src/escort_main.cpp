@@ -5,11 +5,11 @@
 #include <ros/package.h>
 #include "Common.h"
 //TODO: topic include
-#include "SensorsModule.h"
-//TODO: inicjalization include
-#include "TaskModule.h"
-#include "MobilityModule.h"
-#include "DataStorage.h"
+#include "Modules/SensorsModule.h"
+#include "Modules/IdentificationModule.h"
+#include "Modules/TaskModule.h"
+#include "Modules/MobilityModule.h"
+#include "Modules/DataStorage.h"
 
 
 ros::NodeHandle* nodeHandlePublic;
@@ -81,18 +81,6 @@ bool Initialization() {
         }
         return false;
     }
-    if(TaskModule::GetInstance().Initialize(nodeHandlePrivate)) {
-        if(logLevel <= Debug) {
-            ROS_DEBUG("Task module initialized successfully.");
-        }
-    }
-    else {
-        if(logLevel <= Error) {
-            ROS_ERROR("Failed to initialize task module.");
-        }
-        return false;
-    }
-    //TODO: inicjalizacja identyfikacji
     if(SensorsModule::GetInstance().Initialize(nodeHandlePrivate)) {
         if(logLevel <= Debug) {
             ROS_DEBUG("Sensors module initialized successfully.");
@@ -104,6 +92,28 @@ bool Initialization() {
         }
         return false;
     }
+    if(TaskModule::GetInstance().Initialize(nodeHandlePrivate)) {
+        if(logLevel <= Debug) {
+            ROS_DEBUG("Task module initialized successfully.");
+        }
+    }
+    else {
+        if(logLevel <= Error) {
+            ROS_ERROR("Failed to initialize task module.");
+        }
+        return false;
+    }
+    if(IdentificationModule::GetInstance().Initialize(nodeHandlePrivate)) {
+        if(logLevel <= Debug) {
+            ROS_DEBUG("Identification module initialized successfully.");
+        }
+    }
+    else {
+        if(logLevel <= Error) {
+            ROS_ERROR("Failed to initialize identification module.");
+        }
+        return false;
+    }
     //TODO: inicjalizacja topica
 	return true;
 }
@@ -111,7 +121,7 @@ bool Initialization() {
 void Update() {
     //TODO: topic module update
     SensorsModule::GetInstance().Update();
-    //TODO: identification module update
+    IdentificationModule::GetInstance().Update();
     TaskModule::GetInstance().Update();
     MobilityModule::GetInstance().Update();
     DataStorage::GetInstance().Update(mainLoopTime);
