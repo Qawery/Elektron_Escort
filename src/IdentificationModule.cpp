@@ -1,5 +1,4 @@
-#include "TaskModule.h"
-#include "MobilityModule.h"
+#include "IdentificationModule.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -7,11 +6,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //System functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
+bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
     int _logLevel;
-    if(!nodeHandlePrivate->getParam("taskModuleLogLevel", _logLevel)) {
-        ROS_WARN("taskModuleLogLevel not found, using default");
-        logLevel = DEFAULT_TASK_MODULE_LOG_LEVEL;
+    if(!nodeHandlePrivate->getParam("mobilityModuleLogLevel", _logLevel)) {
+        ROS_WARN("mobilityModuleLogLevel not found, using default");
+        logLevel = DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL;
     }
     else {
         switch (_logLevel) {
@@ -28,36 +27,19 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
                 logLevel = Error;
                 break;
             default:
-                ROS_WARN("Requested invalid taskModuleLogLevel, using default");
-                logLevel = DEFAULT_TASK_MODULE_LOG_LEVEL;
+                ROS_WARN("Requested invalid identificationModuleLogLevel, using default");
+                logLevel = DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL;
                 break;
         }
     }
-    state = Awaiting;
-    SensorsModule::GetInstance().ChangeStateTo(Calibrating);
     return true;
-}
-
-void TaskModule::Update() {
-    /*
-     * TODO:
-     * Maszyna stanów z przejściami
-     */
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Task functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TaskModule::CalibrationCompleted(XnUserID newUserId) {
-    DataStorage::GetInstance().SetCurrentUserXnId(newUserId);
-    //TODO: zapisz wzorzec
-    if(logLevel <= Debug) {
-        ROS_DEBUG("Begin following user: %d", newUserId);
-    }
-    state = Following;
-    MobilityModule::GetInstance().SetState(FollowUser);
-}
+//...
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

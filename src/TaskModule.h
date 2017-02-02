@@ -38,6 +38,7 @@ private:
     ~TaskModule() {}
 
     //Task functions
+    //...
 };
 
 #endif //ELEKTRON_ESCORT_TASKMODULE_H

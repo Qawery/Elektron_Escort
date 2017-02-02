@@ -11,12 +11,10 @@
 #include "Common.h"
 
 
-class DataStorage
-{
+class DataStorage {
 public:
     //System functions
-    static DataStorage& GetInstance()
-    {
+    static DataStorage& GetInstance() {
         static DataStorage instance;
         return instance;
     }

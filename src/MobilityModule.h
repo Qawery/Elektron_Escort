@@ -52,6 +52,7 @@ private:
     ~MobilityModule() {}
 
     //Task functions
+    //...
 };
 
 #endif //ELEKTRON_ESCORT_MOBILITYMODULE_H

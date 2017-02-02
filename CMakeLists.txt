@@ -28,7 +28,8 @@ add_executable(escort_main src/escort_main.cpp
         src/SensorsModule.cpp
         src/TaskModule.cpp
         src/MobilityModule.cpp
-        src/DataStorage.cpp)
+        src/DataStorage.cpp
+        src/IdentificationModule.cpp)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
 				     ${OpenNI_LIBRARIES}

@@ -7,18 +7,14 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //System functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHandle *nodeHandlePrivate)
-{
+bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHandle *nodeHandlePrivate) {
     int _logLevel;
-    if(!nodeHandlePrivate->getParam("mobilityModuleLogLevel", _logLevel))
-    {
+    if(!nodeHandlePrivate->getParam("mobilityModuleLogLevel", _logLevel)) {
         ROS_WARN("mobilityModuleLogLevel not found, using default");
         logLevel = DEFAULT_MOBILITY_MODULE_LOG_LEVEL;
     }
-    else
-    {
-        switch (_logLevel)
-        {
+    else {
+        switch (_logLevel) {
             case 0:
                 logLevel = Debug;
                 break;
@@ -37,50 +33,38 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
                 break;
         }
     }
-    if(!nodeHandlePrivate->getParam("distanceToKeep", distanceToKeep))
-    {
-        if(logLevel <= Warn)
-        {
+    if(!nodeHandlePrivate->getParam("distanceToKeep", distanceToKeep)) {
+        if(logLevel <= Warn) {
             ROS_WARN("Value of distanceToKeep not found, using default: %d", DEFAULT_DISTANCE_TO_KEEP);
         }
         distanceToKeep = DEFAULT_DISTANCE_TO_KEEP;
     }
-    if(!nodeHandlePrivate->getParam("positionTolerance", positionTolerance))
-    {
-        if(logLevel <= Warn)
-        {
+    if(!nodeHandlePrivate->getParam("positionTolerance", positionTolerance)) {
+        if(logLevel <= Warn) {
             ROS_WARN("Value of positionTolerance not found, using default: %d", DEFAULT_POSITION_TOLERANCE);
         }
         positionTolerance = DEFAULT_POSITION_TOLERANCE;
     }
-    if(!nodeHandlePrivate->getParam("maxAngularSpeed", maxAngularSpeed))
-    {
-        if(logLevel <= Warn)
-        {
+    if(!nodeHandlePrivate->getParam("maxAngularSpeed", maxAngularSpeed)) {
+        if(logLevel <= Warn) {
             ROS_WARN("Value of maxAngularSpeed not found, using default: %d", DEFULT_MAX_ANGULAR_SPEED);
         }
         maxAngularSpeed = DEFULT_MAX_ANGULAR_SPEED;
     }
-    if(!nodeHandlePrivate->getParam("maxLinearSpeed", maxLinearSpeed))
-    {
-        if(logLevel <= Warn)
-        {
+    if(!nodeHandlePrivate->getParam("maxLinearSpeed", maxLinearSpeed)) {
+        if(logLevel <= Warn) {
             ROS_WARN("Value of maxLinearSpeed not found, using default: %d", DEFAULT_MAX_LINEAR_SPEED);
         }
         maxLinearSpeed = DEFAULT_MAX_LINEAR_SPEED;
     }
-    if(!nodeHandlePrivate->getParam("maxLinearSpeedDistance", maxLinearSpeedDistance))
-    {
-        if(logLevel <= Warn)
-        {
+    if(!nodeHandlePrivate->getParam("maxLinearSpeedDistance", maxLinearSpeedDistance)) {
+        if(logLevel <= Warn) {
             ROS_WARN("Value of maxLinearSpeedDistance not found, using default: %d", DEFAULT_MAX_LINEAR_SPEED_DISTANCE);
         }
         maxLinearSpeedDistance = DEFAULT_MAX_LINEAR_SPEED_DISTANCE;
     }
-    if(!nodeHandlePrivate->getParam("maxAngularSpeedDistance", maxAngularSpeedDistance))
-    {
-        if(logLevel <= Warn)
-        {
+    if(!nodeHandlePrivate->getParam("maxAngularSpeedDistance", maxAngularSpeedDistance)) {
+        if(logLevel <= Warn) {
             ROS_WARN("Value of maxAngularSpeedDistance not found, using default: %d", DEFAULT_MAX_ANGULAR_SPEED_DISTANCE);
         }
         maxAngularSpeedDistance = DEFAULT_MAX_ANGULAR_SPEED_DISTANCE;
@@ -89,19 +73,15 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
     return true;
 }
 
-void MobilityModule::Update()
-{
+void MobilityModule::Update() {
     velocity.linear.x = 0;
     velocity.angular.z = 0;
-    if(state != Stop)
-    {
+    if(state != Stop) {
         XnPoint3D currentUserLocation;
-        if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER)
-        {
+        if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
             currentUserLocation = DataStorage::GetInstance().GetCenterOfMassLocationForUser(DataStorage::GetInstance().GetCurrentUserXnId()-1);
         }
-        else
-        {
+        else {
             currentUserLocation.X = 0.0f;
             currentUserLocation.Y = 0.0f;
             currentUserLocation.Z = 0.0f;
@@ -110,35 +90,27 @@ void MobilityModule::Update()
                 ROS_WARN("No user, when expected");
             }
         }
-        switch (state)
-        {
+        switch (state) {
             case FollowUser:
-                if(currentUserLocation.Z > distanceToKeep)
-                {
+                if(currentUserLocation.Z > distanceToKeep) {
                     velocity.linear.x = ((currentUserLocation.Z-distanceToKeep)/maxLinearSpeedDistance)*maxLinearSpeed;
-                    if(velocity.linear.x > maxLinearSpeed)
-                    {
+                    if(velocity.linear.x > maxLinearSpeed) {
                         velocity.linear.x = maxLinearSpeed;
                     }
                 }
-                if(currentUserLocation.X > positionTolerance)
-                {
+                if(currentUserLocation.X > positionTolerance) {
                     velocity.angular.z = ((currentUserLocation.X-positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed;
-                    if(velocity.angular.z > maxAngularSpeed)
-                    {
+                    if(velocity.angular.z > maxAngularSpeed) {
                         velocity.angular.z = maxAngularSpeed;
                     }
                 }
-                else if(currentUserLocation.X < -positionTolerance)
-                {
+                else if(currentUserLocation.X < -positionTolerance) {
                     velocity.angular.z = ((currentUserLocation.X+positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed;
-                    if(velocity.angular.z < -maxAngularSpeed)
-                    {
+                    if(velocity.angular.z < -maxAngularSpeed) {
                         velocity.angular.z = -maxAngularSpeed;
                     }
                 }
                 break;
-
             case SearchForUser:
                 //TODO: poszukiwanie w kierunku, w którym zniknął użytkownik
                 break;
@@ -151,12 +123,10 @@ void MobilityModule::Update()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Task functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void MobilityModule::SetState(DrivesState newState)
-{
+void MobilityModule::SetState(DrivesState newState) {
     state = newState;
     Update();
-    if(logLevel <= Debug)
-    {
+    if(logLevel <= Debug) {
         ROS_DEBUG("New mobility state: %d", newState);
     }
 }

@@ -12,16 +12,14 @@
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
 #include "Common.h"
-#include "DataStorage.h"
 #include "TaskModule.h"
+#include "DataStorage.h"
 
 
-class SensorsModule
-{
+class SensorsModule {
 public:
     //System functions
-    static SensorsModule& GetInstance()
-    {
+    static SensorsModule& GetInstance() {
         static SensorsModule instance;
         return instance;
     }
@@ -75,4 +73,5 @@ private:
     static void UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID userId, void* cookie);
     static void UserCalibration_CalibrationComplete(xn::SkeletonCapability& skeleton, XnUserID userId, XnCalibrationStatus calibrationError, void* pCookie);
 };
+
 #endif //ELEKTRON_ESCORT_SENSORSMODULE_H
