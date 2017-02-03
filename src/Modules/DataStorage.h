@@ -3,7 +3,7 @@
 
 #define DEFAULT_DATA_STORAGE_LOG_LEVEL Info
 #define DEFAULT_MAX_USERS 3
-#define DEFAULT_POSE_COOLDOWN_TIME 3
+#define DEFAULT_POSE_COOLDOWN_TIME 3.0f
 
 #include <mutex>
 #include <ros/ros.h>
@@ -19,15 +19,23 @@ public:
         return instance;
     }
     bool Initialize(ros::NodeHandle* nodeHandlePrivate);
-    void Update(float timeElapsed);
+    void Update(double timeElapsed);
     //TODO: wiadomości sterujące
     int GetMaxUsers();
 
     //Task functions
     XnUserID GetCurrentUserXnId();
     void SetCurrentUserXnId(XnUserID newCurrentUserXnId);
-    void PoseDetectedForUser(int userId);
-    bool WasPoseDetectedForUser(int userId);
+    void UserNew(int userId);
+    bool IsUserNew(int userId);
+    void UserExit(int userId);
+    bool IsUserExit(int userId);
+    void UserReEnter(int userId);
+    bool IsUserReEnter(int userId);
+    void UserLost(int userId);
+    bool IsUserLost(int userId);
+    void UserPose(int userId);
+    bool IsUserPose(int userId);
     bool IsPoseCooldownPassed(int userId);
     void SetCenterOfMassLocationForUser(int userId, XnPoint3D CoMLocation);
     XnPoint3D GetCenterOfMassLocationForUser(int userId);
@@ -42,7 +50,11 @@ private:
 
     //Task fields
     XnUserID currentUserXnId;
-    std::vector<bool> poseDetected;
+    std::vector<bool> userNew;
+    std::vector<bool> userExit;
+    std::vector<bool> userReEnter;
+    std::vector<bool> userLost;
+    std::vector<bool> userPose;
     std::vector<float> poseCooldown;
     std::vector<XnPoint3D> centerOfMassLocation;
 
@@ -51,7 +63,7 @@ private:
     DataStorage(const DataStorage &);
     DataStorage& operator=(const DataStorage&);
     ~DataStorage() {}
-    void UpdatePoseData(float timeElapsed);
+    void UpdateUserData(double timeElapsed);
     void ClearCenterOfMasses();
 
     //Task functions

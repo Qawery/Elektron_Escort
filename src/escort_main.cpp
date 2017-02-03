@@ -1,5 +1,5 @@
 #define DEFAULT_ESCORT_MAIN_LOG_LEVEL Info
-#define DEFAULT_MAIN_LOOP_RATE 30
+#define DEFAULT_MAIN_LOOP_RATE 30.0
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -21,7 +21,7 @@ double mainLoopTime;
 
 bool Initialization() {
     if(logLevel <= Info) {
-        ROS_INFO("Initialization start");
+        ROS_INFO("EscortMain: Initialization start");
     }
 	nodeHandlePublic = new ros::NodeHandle();
 	nodeHandlePrivate = new ros::NodeHandle("~");
@@ -30,7 +30,7 @@ bool Initialization() {
     }
     int _logLevel;
     if(!nodeHandlePrivate->getParam("escortMainLogLevel", _logLevel)) {
-        ROS_WARN("Log level not found, using default");
+        ROS_WARN("EscortMain: Log level not found, using default");
         logLevel = DEFAULT_ESCORT_MAIN_LOG_LEVEL;
     }
     else {
@@ -48,14 +48,14 @@ bool Initialization() {
                 logLevel = Error;
                 break;
             default:
-                ROS_WARN("Requested invalid log level, using default");
+                ROS_WARN("EscortMain: Requested invalid log level, using default");
                 logLevel = DEFAULT_ESCORT_MAIN_LOG_LEVEL;
                 break;
         }
     }
     if(!nodeHandlePrivate->getParam("mainLoopRate", mainLoopRate)) {
         if(logLevel <= Warn) {
-            ROS_WARN("Value of mainLoopRate not found, using default: %d", DEFAULT_MAIN_LOOP_RATE);
+            ROS_WARN("EscortMain: Value of mainLoopRate not found, using default: %f", DEFAULT_MAIN_LOOP_RATE);
         }
         mainLoopRate = DEFAULT_MAIN_LOOP_RATE;
     }
@@ -63,62 +63,62 @@ bool Initialization() {
     //Modules initialization
     if(DataStorage::GetInstance().Initialize(nodeHandlePrivate)) {
         if(logLevel <= Debug) {
-            ROS_DEBUG("Data storage initialized successfully");
+            ROS_DEBUG("EscortMain: Data storage initialized successfully");
         }
     }
     else {
         if(logLevel <= Error) {
-            ROS_ERROR("Failed to initialize data storage");
+            ROS_ERROR("EscortMain: Failed to initialize data storage");
         }
         return false;
     }
     if(MobilityModule::GetInstance().Initialize(nodeHandlePublic, nodeHandlePrivate)) {
         if(logLevel <= Debug) {
-            ROS_DEBUG("Mobility module initialized successfully");
+            ROS_DEBUG("EscortMain: Mobility module initialized successfully");
         }
     }
     else {
         if(logLevel <= Error) {
-            ROS_ERROR("Failed to initialize mobility module");
+            ROS_ERROR("EscortMain: Failed to initialize mobility module");
         }
         return false;
     }
     if(SensorsModule::GetInstance().Initialize(nodeHandlePrivate)) {
         if(logLevel <= Debug) {
-            ROS_DEBUG("Sensors module initialized successfully");
+            ROS_DEBUG("EscortMain: Sensors module initialized successfully");
         }
     }
     else {
         if(logLevel <= Error) {
-            ROS_ERROR("Failed to initialize sensors module");
-        }
-        return false;
-    }
-    if(TaskModule::GetInstance().Initialize(nodeHandlePrivate)) {
-        if(logLevel <= Debug) {
-            ROS_DEBUG("Task module initialized successfully");
-        }
-    }
-    else {
-        if(logLevel <= Error) {
-            ROS_ERROR("Failed to initialize task module");
+            ROS_ERROR("EscortMain: Failed to initialize sensors module");
         }
         return false;
     }
     if(IdentificationModule::GetInstance().Initialize(nodeHandlePrivate)) {
         if(logLevel <= Debug) {
-            ROS_DEBUG("Identification module initialized successfully");
+            ROS_DEBUG("EscortMain: Identification module initialized successfully");
         }
     }
     else {
         if(logLevel <= Error) {
-            ROS_ERROR("Failed to initialize identification module");
+            ROS_ERROR("EscortMain: Failed to initialize identification module");
         }
         return false;
     }
     //TODO: inicjalizacja modułu topica
+    if(TaskModule::GetInstance().Initialize(nodeHandlePrivate)) {
+        if(logLevel <= Debug) {
+            ROS_DEBUG("EscortMain: Task module initialized successfully");
+        }
+    }
+    else {
+        if(logLevel <= Error) {
+            ROS_ERROR("EscortMain: Failed to initialize task module");
+        }
+        return false;
+    }
     if(logLevel <= Info) {
-        ROS_INFO("Initialization complete, starting program");
+        ROS_INFO("EscortMain: Initialization complete, starting program");
     }
 	return true;
 }
@@ -128,7 +128,7 @@ void Update() {
     SensorsModule::GetInstance().Update();
     IdentificationModule::GetInstance().Update();
     TaskModule::GetInstance().Update();
-    MobilityModule::GetInstance().Update();
+    MobilityModule::GetInstance().Update(mainLoopTime);
     DataStorage::GetInstance().Update(mainLoopTime);
 }
 
@@ -142,14 +142,13 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "escort_main");
 	if(Initialization()) {
 		ros::Rate mainLoopRate(mainLoopRate);
-        //TODO: eleganckie przestawienie TaskModule w stan oczekiwania na rejestrację
 		while (ros::ok()) {
             Update();
 			mainLoopRate.sleep();
 		}
 	}
     if(logLevel <= Info) {
-        ROS_INFO("Ending program");
+        ROS_INFO("EscortMain: Ending program");
     }
 	Finish();
 	return 0;

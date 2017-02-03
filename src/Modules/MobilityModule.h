@@ -8,11 +8,14 @@
 #define DEFAULT_MAX_ANGULAR_SPEED_DISTANCE 500
 #define DEFAULT_POSITION_TOLERANCE 100
 #define DEFAULT_DISTANCE_TO_KEEP 2000
+#define DEFAULT_SEARCH_TIME_LIMIT 5.0f
+#define DEFAULT_WAIT_TIME 2.0f
 #define DRIVES_TOPIC_NAME "cmd_vel"
 
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <geometry_msgs/Twist.h>
+#include <XnTypes.h>
 #include "../Common.h"
 #include "DataStorage.h"
 
@@ -30,7 +33,7 @@ public:
         return instance;
     }
     bool Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHandle *nodeHandlePrivate);
-    void Update();
+    void Update(double timeElapsed);
 
     //Task functions
     DrivesState GetState();
@@ -47,6 +50,9 @@ private:
     double maxLinearSpeed;
     double maxLinearSpeedDistance;
     double maxAngularSpeedDistance;
+    double searchTimeLimit;
+    double searchTimeElapsed;
+    double waitTime;
 
     //Task fields
     XnPoint3D lastUserLocation;
@@ -60,7 +66,7 @@ private:
     //Task functions
     void StopStateUpdate();
     void FollowUserStateUpdate();
-    void SearchForUserStateUpdate();
+    void SearchForUserStateUpdate(double timeElapsed);
 };
 
 #endif //ELEKTRON_ESCORT_MOBILITY_MODULE_H

@@ -1,7 +1,7 @@
 #ifndef ELEKTRON_ESCORT_SENSORS_MODULE_H
 #define ELEKTRON_ESCORT_SENSORS_MODULE_H
 
-#define DEFAULT_SENSORS_MODULE_LOG_LEVEL Debug
+#define DEFAULT_SENSORS_MODULE_LOG_LEVEL Info
 #define CALIBRATION_POSE "Psi"
 #define CALIBRATION_SLOT 0
 
@@ -40,13 +40,11 @@ public:
     //Task functions
     void ChangeStateTo(SensorsState newState);
     void UnsafeChangeStateTo(SensorsState newState);
-    void PoseDetected(XnUserID userId);
 
 private:
     //System fields
     LogLevels logLevel;
     std::mutex stateMutex;
-    std::mutex newDataMutex;
     xn::Context context;
     xn::UserGenerator userGenerator;
     SensorsState state;
@@ -55,7 +53,7 @@ private:
     XnCallbackHandle poseCallbacksHandle;
 
     //Task fields
-    std::vector<bool> newPoseDetected;
+    //...
 
     //System functions
     SensorsModule() {}
@@ -66,7 +64,6 @@ private:
     //Task functions
     void ExitState(SensorsState state);
     void EnterState(SensorsState state);
-    void SendNewPoseDataToStorage();
     void LoadCalibrationDataForUser(XnUserID userId);
 
     //Callbacks

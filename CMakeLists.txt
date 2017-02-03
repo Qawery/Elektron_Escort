@@ -29,7 +29,7 @@ add_executable(escort_main src/escort_main.cpp
         src/Modules/TaskModule.cpp
         src/Modules/MobilityModule.cpp
         src/Modules/DataStorage.cpp
-        src/Modules/IdentificationModule.cpp)
+        src/Modules/IdentificationModule.cpp src/Modules/IdentificationMethods/UserID_Method.cpp src/Modules/IdentificationMethods/UserID_Method.h)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
 				     ${OpenNI_LIBRARIES}

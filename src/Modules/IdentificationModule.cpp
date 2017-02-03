@@ -8,8 +8,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
     int _logLevel;
-    if(!nodeHandlePrivate->getParam("mobilityModuleLogLevel", _logLevel)) {
-        ROS_WARN("mobilityModuleLogLevel not found, using default");
+    if(!nodeHandlePrivate->getParam("identificationModuleLogLevel", _logLevel)) {
+        ROS_WARN("IdentificationModule: Log level not found, using default");
         logLevel = DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL;
     }
     else {
@@ -27,13 +27,13 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
                 logLevel = Error;
                 break;
             default:
-                ROS_WARN("Requested invalid identificationModuleLogLevel, using default");
+                ROS_WARN("IdentificationModule: Requested invalid log level, using default");
                 logLevel = DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL;
                 break;
         }
     }
     if(logLevel <= Info) {
-        ROS_INFO("Identification module initialized");
+        ROS_INFO("IdentificationModule: initialized");
     }
     return true;
 }
