@@ -1,7 +1,7 @@
 #ifndef ELEKTRON_ESCORT_DATASTORAGE_H
 #define ELEKTRON_ESCORT_DATASTORAGE_H
 
-#define DEFAULT_DATA_STORAGE_LOG_LEVEL Debug
+#define DEFAULT_DATA_STORAGE_LOG_LEVEL Info
 #define DEFAULT_MAX_USERS 3
 #define DEFAULT_POSE_COOLDOWN_TIME 3
 
@@ -20,12 +20,15 @@ public:
     }
     bool Initialize(ros::NodeHandle* nodeHandlePrivate);
     void Update(float timeElapsed);
+    //TODO: wiadomości sterujące
     int GetMaxUsers();
 
     //Task functions
     XnUserID GetCurrentUserXnId();
     void SetCurrentUserXnId(XnUserID newCurrentUserXnId);
     void PoseDetectedForUser(int userId);
+    bool WasPoseDetectedForUser(int userId);
+    bool IsPoseCooldownPassed(int userId);
     void SetCenterOfMassLocationForUser(int userId, XnPoint3D CoMLocation);
     XnPoint3D GetCenterOfMassLocationForUser(int userId);
 
@@ -34,6 +37,8 @@ private:
     LogLevels logLevel;
     int maxUsers;
     float poseCooldownTime;
+    //TODO: czy jest nowa wiadomość sterująca
+    //TODO: wiadomość sterująca
 
     //Task fields
     XnUserID currentUserXnId;

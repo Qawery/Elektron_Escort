@@ -32,19 +32,29 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
                 break;
         }
     }
+    if(logLevel <= Info) {
+        ROS_INFO("Identification module initialized");
+    }
     return true;
 }
 
 void IdentificationModule::Update()
 {
-
+    //TODO: wyznaczenie kto jest użytkownikiem
+    //TODO: uaktualnienie metod na podstawie znalezionego użytkownika
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Task functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//...
+void IdentificationModule::ClearTemplate() {
+    //TODO: wyczyszczenie wzorców metod
+}
+
+void IdentificationModule::SaveTemplateOfCurrentUser() {
+    //TODO: zapisanie wzorców metod na podstawie obecnego użytkownika
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

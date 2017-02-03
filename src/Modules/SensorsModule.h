@@ -1,5 +1,5 @@
-#ifndef ELEKTRON_ESCORT_SENSORSMODULE_H
-#define ELEKTRON_ESCORT_SENSORSMODULE_H
+#ifndef ELEKTRON_ESCORT_SENSORS_MODULE_H
+#define ELEKTRON_ESCORT_SENSORS_MODULE_H
 
 #define DEFAULT_SENSORS_MODULE_LOG_LEVEL Debug
 #define CALIBRATION_POSE "Psi"
@@ -15,6 +15,11 @@
 #include "TaskModule.h"
 #include "DataStorage.h"
 
+
+enum SensorsState
+{
+    Off, Calibrating, Working
+};
 
 class SensorsModule {
 public:
@@ -74,4 +79,4 @@ private:
     static void UserCalibration_CalibrationComplete(xn::SkeletonCapability& skeleton, XnUserID userId, XnCalibrationStatus calibrationError, void* pCookie);
 };
 
-#endif //ELEKTRON_ESCORT_SENSORSMODULE_H
+#endif //ELEKTRON_ESCORT_SENSORS_MODULE_H

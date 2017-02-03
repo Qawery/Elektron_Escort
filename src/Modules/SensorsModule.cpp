@@ -86,6 +86,9 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
     userGenerator.GetPoseDetectionCap().RegisterToPoseDetected(UserPose_PoseDetected, NULL, poseCallbacksHandle);
     stateMutex.unlock();
     newDataMutex.unlock();
+    if(logLevel <= Info) {
+        ROS_INFO("Sensors module initialized");
+    }
     return true;
 }
 
@@ -96,8 +99,10 @@ void SensorsModule::Update()
     XnUInt16 numberOfUsers = userGenerator.GetNumberOfUsers();
     XnUserID userIds[numberOfUsers];
     userGenerator.GetUsers(userIds, numberOfUsers);
+    //TODO: debug
     for(int i=0; i < numberOfUsers; ++i) {
         //TODO: wyślij dane o użytkownikach do DataStorage
+        //TODO: debug
         XnPoint3D centerOfMass;
         userGenerator.GetCoM(userIds[i], centerOfMass);
         DataStorage::GetInstance().SetCenterOfMassLocationForUser(userIds[i]-1, centerOfMass);
@@ -138,12 +143,14 @@ void SensorsModule::ChangeStateTo(SensorsState newState) {
     EnterState(newState);
     state = newState;
     stateMutex.unlock();
+    //TODO: Info
 }
 
 void SensorsModule::UnsafeChangeStateTo(SensorsState newState) {
     ExitState(state);
     EnterState(newState);
     state = newState;
+    //TODO: Info
 }
 
 void SensorsModule::PoseDetected(XnUserID userId) {
@@ -286,12 +293,12 @@ void SensorsModule::UserPose_PoseDetected(xn::PoseDetectionCapability& capabilit
     if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
         ROS_DEBUG("User: %d- pose detected", userId);
     }
-    SensorsModule::GetInstance().PoseDetected(userId);
     if (SensorsModule::GetInstance().GetState() == Calibrating) {
-        if(!SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().IsCalibrating(userId)) {
+        if(DataStorage::GetInstance().IsPoseCooldownPassed(userId-1) && !SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().IsCalibrating(userId)) {
             SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().RequestCalibration(userId, TRUE);
         }
     }
+    SensorsModule::GetInstance().PoseDetected(userId);
     SensorsModule::GetInstance().UnlockStateMutex();
 }
 
@@ -317,7 +324,7 @@ void SensorsModule::UserCalibration_CalibrationComplete(xn::SkeletonCapability& 
             }
             SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().SaveCalibrationData(userId, CALIBRATION_SLOT);
             SensorsModule::GetInstance().UnsafeChangeStateTo(Working);
-            TaskModule::GetInstance().CalibrationCompleted(userId);
+            DataStorage::GetInstance().SetCurrentUserXnId(userId);
         }
     }
     else {

@@ -69,6 +69,9 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate) {
         poseCooldownTime = 0.0f;
     }
     currentUserXnId = NO_USER;
+    if(logLevel <= Info) {
+        ROS_INFO("Data storage initialized");
+    }
     return true;
 }
 
@@ -115,6 +118,35 @@ void DataStorage::PoseDetectedForUser(int userId) {
     }
 }
 
+bool DataStorage::WasPoseDetectedForUser(int userId) {
+    if(userId < 0 || userId >= poseDetected.size()) {
+        if(logLevel <= Warn) {
+            ROS_WARN("Attempt to read pose detected for invalid user: %d", userId);
+        }
+        return false;
+    }
+    else {
+        return poseDetected[userId];
+    }
+}
+
+bool DataStorage::IsPoseCooldownPassed(int userId) {
+    if(userId < 0 || userId >= poseCooldown.size()) {
+        if(logLevel <= Warn) {
+            ROS_WARN("Attempt to read pose cooldown for invalid user: %d", userId);
+        }
+        return true;
+    }
+    else {
+        if(poseCooldown[userId] <= 0.0f) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
 XnPoint3D DataStorage::GetCenterOfMassLocationForUser(int userId) {
     if(userId < 0 || userId >= centerOfMassLocation.size()) {
         if(logLevel <= Warn) {
@@ -134,7 +166,7 @@ XnPoint3D DataStorage::GetCenterOfMassLocationForUser(int userId) {
 void DataStorage::SetCenterOfMassLocationForUser(int userId, XnPoint3D CoMLocation) {
     if(userId < 0 || userId >= centerOfMassLocation.size()) {
         if(logLevel <= Warn) {
-            ROS_WARN("Attempt to get center of mass of invalid user: %d", userId);
+            ROS_WARN("Attempt to set center of mass of invalid user: %d", userId);
         }
     }
     else {

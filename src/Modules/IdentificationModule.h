@@ -1,7 +1,7 @@
-#ifndef ELEKTRON_ESCORT_IDENTIFICATIONMODULE_H
-#define ELEKTRON_ESCORT_IDENTIFICATIONMODULE_H
+#ifndef ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H
+#define ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H
 
-#define DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL Debug
+#define DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL Info
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -19,7 +19,8 @@ public:
     void Update();
 
     //Task functions
-    //...
+    void ClearTemplate();
+    void SaveTemplateOfCurrentUser();
 
 private:
     //System fields
@@ -37,4 +38,5 @@ private:
     //Task functions
     //...
 };
-#endif //ELEKTRON_ESCORT_IDENTIFICATIONMODULE_H
+
+#endif //ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H

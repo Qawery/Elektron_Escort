@@ -1,7 +1,7 @@
-#ifndef ELEKTRON_ESCORT_MOBILITYMODULE_H
-#define ELEKTRON_ESCORT_MOBILITYMODULE_H
+#ifndef ELEKTRON_ESCORT_MOBILITY_MODULE_H
+#define ELEKTRON_ESCORT_MOBILITY_MODULE_H
 
-#define DEFAULT_MOBILITY_MODULE_LOG_LEVEL Debug
+#define DEFAULT_MOBILITY_MODULE_LOG_LEVEL Info
 #define DEFAULT_MAX_LINEAR_SPEED 100
 #define DEFAULT_MAX_LINEAR_SPEED_DISTANCE 1000
 #define DEFULT_MAX_ANGULAR_SPEED 100
@@ -17,6 +17,11 @@
 #include "DataStorage.h"
 
 
+enum DrivesState
+{
+    Stop, FollowUser, SearchForUser
+};
+
 class MobilityModule {
 public:
     //System functions
@@ -28,15 +33,13 @@ public:
     void Update();
 
     //Task functions
+    DrivesState GetState();
     void SetState(DrivesState newState);
 
 private:
     //System fields
     LogLevels logLevel;
-
-    //Task fields
     DrivesState state;
-    geometry_msgs::Twist velocity;
     ros::Publisher publisher;
     double distanceToKeep;
     double positionTolerance;
@@ -45,6 +48,9 @@ private:
     double maxLinearSpeedDistance;
     double maxAngularSpeedDistance;
 
+    //Task fields
+    XnPoint3D lastUserLocation;
+
     //System functions
     MobilityModule() {}
     MobilityModule(const MobilityModule &);
@@ -52,7 +58,9 @@ private:
     ~MobilityModule() {}
 
     //Task functions
-    //...
+    void StopStateUpdate();
+    void FollowUserStateUpdate();
+    void SearchForUserStateUpdate();
 };
 
-#endif //ELEKTRON_ESCORT_MOBILITYMODULE_H
+#endif //ELEKTRON_ESCORT_MOBILITY_MODULE_H
