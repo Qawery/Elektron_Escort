@@ -111,6 +111,7 @@ void DataStorage::PoseDetectedForUser(int userId) {
         }
         else {
             poseDetected[userId] = true;
+            poseCooldown[userId] = poseCooldownTime;
             if(logLevel <= Debug) {
                 ROS_DEBUG("Pose detected for user %d", userId);
             }

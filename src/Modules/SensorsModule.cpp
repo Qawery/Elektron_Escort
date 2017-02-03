@@ -95,7 +95,7 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
 void SensorsModule::Update()
 {
     context.WaitAnyUpdateAll();
-    SendNewDataToStorage();
+    SendNewPoseDataToStorage();
     XnUInt16 numberOfUsers = userGenerator.GetNumberOfUsers();
     XnUserID userIds[numberOfUsers];
     userGenerator.GetUsers(userIds, numberOfUsers);
@@ -215,7 +215,7 @@ void SensorsModule::EnterState(SensorsState state) {
     }
 }
 
-void SensorsModule::SendNewDataToStorage() {
+void SensorsModule::SendNewPoseDataToStorage() {
     newDataMutex.lock();
     for(int i=0; i<DataStorage::GetInstance().GetMaxUsers(); ++i) {
         if(newPoseDetected[i]) {

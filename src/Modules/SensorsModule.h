@@ -66,7 +66,7 @@ private:
     //Task functions
     void ExitState(SensorsState state);
     void EnterState(SensorsState state);
-    void SendNewDataToStorage();
+    void SendNewPoseDataToStorage();
     void LoadCalibrationDataForUser(XnUserID userId);
 
     //Callbacks
