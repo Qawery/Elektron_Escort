@@ -151,7 +151,14 @@ void MobilityModule::FollowUserStateUpdate() {
     }
     else {
         geometry_msgs::Twist velocity;
-        lastUserLocation = DataStorage::GetInstance().GetCenterOfMassLocationForUser(DataStorage::GetInstance().GetCurrentUserXnId()-1);
+        lastUserLocation.X = 0.0f;
+        lastUserLocation.Z = 0.0f;
+        SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), lastUserLocation);
+        if(lastUserLocation.Z == 0.0f) {
+            if(logLevel <= Warn) {
+                ROS_WARN("MobilityModule: Invalid user location");
+            }
+        }
         if(lastUserLocation.Z > distanceToKeep) {
             velocity.linear.x = ((lastUserLocation.Z-distanceToKeep)/maxLinearSpeedDistance)*maxLinearSpeed;
             if(velocity.linear.x > maxLinearSpeed) {

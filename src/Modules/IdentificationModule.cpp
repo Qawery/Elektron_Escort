@@ -32,16 +32,53 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
                 break;
         }
     }
+    if(!nodeHandlePrivate->getParam("identificationThreshold", identificationThreshold)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("IdentificationModule: Value of identificationThreshold not found, using default: %f", DEFAULT_IDENTIFICATION_THRESHOLD);
+        }
+        identificationThreshold = DEFAULT_IDENTIFICATION_THRESHOLD;
+    }
+    if(!nodeHandlePrivate->getParam("userID_MethodTrust", userID_method.trustValue)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("IdentificationModule: Trust value for userID method not found, using default: %f", DEFAULT_USER_ID_METHOD_TRUST);
+        }
+        userID_method.trustValue = DEFAULT_USER_ID_METHOD_TRUST;
+    }
     if(logLevel <= Info) {
         ROS_INFO("IdentificationModule: initialized");
     }
+    isTemplateSaved = false;
     return true;
 }
 
 void IdentificationModule::Update()
 {
-    //TODO: wyznaczenie kto jest użytkownikiem
-    //TODO: uaktualnienie metod na podstawie znalezionego użytkownika
+    if(isTemplateSaved) {
+        XnUInt16 numberOfUsers = SensorsModule::GetInstance().GetUserGenerator().GetNumberOfUsers();
+        XnUserID userIds[numberOfUsers];
+        SensorsModule::GetInstance().GetUserGenerator().GetUsers(userIds, numberOfUsers);
+        float usersRanking[numberOfUsers];
+        for (int i = 0; i < numberOfUsers; ++i) {
+            usersRanking[i] = 0.0f;
+            if(DataStorage::GetInstance().IsPresentOnScene(userIds[i])) {
+                usersRanking[i] += userID_method.trustValue * userID_method.RateUser(userIds[i]);
+            }
+        }
+        int favouriteIndex = 0;
+        for (int i = 1; i < numberOfUsers; ++i) {
+            if (usersRanking[favouriteIndex] < usersRanking[i]) {
+                favouriteIndex = i;
+            }
+        }
+        if (usersRanking[favouriteIndex] > identificationThreshold) {
+            DataStorage::GetInstance().SetCurrentUserXnId(userIds[favouriteIndex]);
+        } else {
+            DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
+        }
+        for (int i = 0; i < numberOfUsers; ++i) {
+            userID_method.LateUpdate();
+        }
+    }
 }
 
 
@@ -49,11 +86,18 @@ void IdentificationModule::Update()
 //Task functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void IdentificationModule::ClearTemplate() {
-    //TODO: wyczyszczenie wzorców metod
+    userID_method.ClearTemplate();
+    isTemplateSaved = false;
 }
 
-void IdentificationModule::SaveTemplateOfCurrentUser() {
-    //TODO: zapisanie wzorców metod na podstawie obecnego użytkownika
+bool IdentificationModule::SaveTemplateOfCurrentUser() {
+    if(userID_method.SaveTemplate()) {
+        isTemplateSaved = true;
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 

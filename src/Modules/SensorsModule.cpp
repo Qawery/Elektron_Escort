@@ -89,15 +89,6 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
 void SensorsModule::Update()
 {
     context.WaitAnyUpdateAll();
-    XnUInt16 numberOfUsers = userGenerator.GetNumberOfUsers();
-    XnUserID userIds[numberOfUsers];
-    userGenerator.GetUsers(userIds, numberOfUsers);
-    for(int i=0; i < numberOfUsers; ++i) {
-        //TODO: wyślij dane o użytkownikach do DataStorage
-        XnPoint3D centerOfMass;
-        userGenerator.GetCoM(userIds[i], centerOfMass);
-        DataStorage::GetInstance().SetCenterOfMassLocationForUser(userIds[i]-1, centerOfMass);
-    }
 }
 
 void SensorsModule::Finish() {
@@ -236,7 +227,7 @@ void SensorsModule::User_NewUser(xn::UserGenerator& generator, XnUserID userId, 
             SensorsModule::GetInstance().LoadCalibrationDataForUser(userId);
         }
     }
-    DataStorage::GetInstance().UserNew(userId-1);
+    DataStorage::GetInstance().UserNew(userId);
     SensorsModule::GetInstance().UnlockStateMutex();
 }
 
@@ -245,7 +236,7 @@ void SensorsModule::User_Exit(xn::UserGenerator &generator, XnUserID userId, voi
     if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
         ROS_DEBUG("SensorsModule: User: %d- exit", userId);
     }
-    DataStorage::GetInstance().UserExit(userId-1);
+    DataStorage::GetInstance().UserExit(userId);
     SensorsModule::GetInstance().UnlockStateMutex();
 }
 
@@ -255,7 +246,7 @@ void SensorsModule::User_ReEnter(xn::UserGenerator &generator, XnUserID userId, 
     if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
         ROS_DEBUG("SensorsModule: User: %d- reenter", userId);
     }
-    DataStorage::GetInstance().UserReEnter(userId-1);
+    DataStorage::GetInstance().UserReEnter(userId);
     SensorsModule::GetInstance().UnlockStateMutex();
 }
 
@@ -265,7 +256,6 @@ void SensorsModule::User_LostUser(xn::UserGenerator& generator, XnUserID userId,
     if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
         ROS_DEBUG("SensorsModule: User: %d- lost", userId);
     }
-    DataStorage::GetInstance().UserLost(userId-1);
     SensorsModule::GetInstance().UnlockStateMutex();
 }
 

@@ -99,12 +99,20 @@ void TaskModule::AwaitRegistration() {
 }
 
 void TaskModule::BeginFollowing() {
-    state = Following;
-    MobilityModule::GetInstance().SetState(FollowUser);
-    IdentificationModule::GetInstance().SaveTemplateOfCurrentUser();
-    if(logLevel <= Info) {
-        ROS_INFO("TaskModule: Begin following user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
+    if(IdentificationModule::GetInstance().SaveTemplateOfCurrentUser()) {
+        state = Following;
+        MobilityModule::GetInstance().SetState(FollowUser);
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Begin following user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
+        }
     }
+    else {
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Failed template creation for user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
+        }
+        AwaitRegistration();
+    }
+
 }
 
 void TaskModule::ResumeFollowing() {

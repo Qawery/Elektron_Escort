@@ -1,7 +1,7 @@
 #ifndef ELEKTRON_ESCORT_COMMON_H
 #define ELEKTRON_ESCORT_COMMON_H
 
-#define NO_USER -1
+#define NO_USER 1383099359
 
 enum LogLevels
 {

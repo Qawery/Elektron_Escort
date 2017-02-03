@@ -18,6 +18,7 @@
 #include <XnTypes.h>
 #include "../Common.h"
 #include "DataStorage.h"
+#include "SensorsModule.h"
 
 
 enum DrivesState
