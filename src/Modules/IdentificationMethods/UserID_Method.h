@@ -13,7 +13,7 @@ public:
     void LateUpdate();
 
 private:
-    XnUserID previousId;
+    XnUserID originalId;
 };
 
 #endif //ELEKTRON_ESCORT_USERID_METHOD_H

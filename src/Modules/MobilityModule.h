@@ -8,8 +8,6 @@
 #define DEFAULT_MAX_ANGULAR_SPEED_DISTANCE 500
 #define DEFAULT_POSITION_TOLERANCE 100
 #define DEFAULT_DISTANCE_TO_KEEP 2000
-#define DEFAULT_SEARCH_TIME_LIMIT 5.0
-#define DEFAULT_WAIT_TIME 2.0
 #define DRIVES_TOPIC_NAME "cmd_vel"
 
 #include <ros/ros.h>
@@ -21,27 +19,21 @@
 #include "SensorsModule.h"
 
 
-enum DrivesState
-{
-    Stop, FollowUser, SearchForUser
+enum DrivesState {
+    Stop, FollowUser, SearchForUserLeft, SearchForUserRight
 };
 
 class MobilityModule {
 public:
-    //System functions
     static MobilityModule &GetInstance() {
         static MobilityModule instance;
         return instance;
     }
     bool Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHandle *nodeHandlePrivate);
-    void Update(double timeElapsed);
-
-    //Task functions
-    DrivesState GetState();
+    void Update();
     void SetState(DrivesState newState);
 
 private:
-    //System fields
     LogLevels logLevel;
     DrivesState state;
     ros::Publisher publisher;
@@ -51,23 +43,14 @@ private:
     double maxLinearSpeed;
     double maxLinearSpeedDistance;
     double maxAngularSpeedDistance;
-    double searchTimeLimit;
-    double searchTimeElapsed;
-    double waitTime;
 
-    //Task fields
-    XnPoint3D lastUserLocation;
-
-    //System functions
     MobilityModule() {}
     MobilityModule(const MobilityModule &);
     MobilityModule &operator=(const MobilityModule &);
     ~MobilityModule() {}
-
-    //Task functions
     void StopStateUpdate();
     void FollowUserStateUpdate();
-    void SearchForUserStateUpdate(double timeElapsed);
+    void SearchForUserStateUpdate(bool clockwiseRotation);
 };
 
 #endif //ELEKTRON_ESCORT_MOBILITY_MODULE_H

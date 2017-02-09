@@ -16,14 +16,12 @@
 #include "DataStorage.h"
 
 
-enum SensorsState
-{
+enum SensorsState {
     Off, Calibrating, Working
 };
 
 class SensorsModule {
 public:
-    //System functions
     static SensorsModule& GetInstance() {
         static SensorsModule instance;
         return instance;
@@ -36,13 +34,10 @@ public:
     void LockStateMutex();
     void UnlockStateMutex();
     SensorsState GetState();
-
-    //Task functions
     void ChangeStateTo(SensorsState newState);
-    void UnsafeChangeStateTo(SensorsState newState);
+    void ClearCalibration();
 
 private:
-    //System fields
     LogLevels logLevel;
     std::mutex stateMutex;
     xn::Context context;
@@ -52,16 +47,10 @@ private:
     XnCallbackHandle calibrationCallbacksHandle;
     XnCallbackHandle poseCallbacksHandle;
 
-    //Task fields
-    //...
-
-    //System functions
     SensorsModule() {}
     SensorsModule(const SensorsModule &);
     SensorsModule& operator=(const SensorsModule&);
     ~SensorsModule() {}
-
-    //Task functions
     void ExitState(SensorsState state);
     void EnterState(SensorsState state);
     void LoadCalibrationDataForUser(XnUserID userId);

@@ -1,12 +1,12 @@
 #include "UserID_Method.h"
 
 void UserID_Method::ClearTemplate() {
-    previousId = NO_USER;
+    originalId = NO_USER;
 }
 
 bool UserID_Method::SaveTemplate() {
     if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
-        previousId = DataStorage::GetInstance().GetCurrentUserXnId();
+        originalId = DataStorage::GetInstance().GetCurrentUserXnId();
         return true;
     }
     else {
@@ -20,14 +20,16 @@ void UserID_Method::Update() {
 }
 
 double UserID_Method::RateUser(XnUserID userId) {
-    if(previousId != NO_USER && previousId == userId) {
-        return 1.0f;
+    if(originalId != NO_USER && originalId == userId) {
+        return 1.0;
     }
     else {
-        return 0.0f;
+        return 0.0;
     }
 }
 
 void UserID_Method::LateUpdate() {
-    previousId = DataStorage::GetInstance().GetCurrentUserXnId();
+    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
+        originalId = DataStorage::GetInstance().GetCurrentUserXnId();
+    }
 }

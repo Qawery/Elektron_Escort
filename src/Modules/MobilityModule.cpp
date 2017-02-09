@@ -4,8 +4,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Public
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//System functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHandle *nodeHandlePrivate) {
     int _logLevel;
     if(!nodeHandlePrivate->getParam("mobilityModuleLogLevel", _logLevel)) {
@@ -68,19 +66,6 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
         }
         maxLinearSpeedDistance = DEFAULT_MAX_LINEAR_SPEED_DISTANCE;
     }
-    if(!nodeHandlePrivate->getParam("searchTimeLimit", searchTimeLimit)) {
-        if(logLevel <= Warn) {
-            ROS_WARN("MobilityModule: Value of searchTimeLimit not found, using default: %f", DEFAULT_SEARCH_TIME_LIMIT);
-        }
-        searchTimeLimit = DEFAULT_SEARCH_TIME_LIMIT;
-    }
-    if(!nodeHandlePrivate->getParam("waitTime", waitTime)) {
-        if(logLevel <= Warn) {
-            ROS_WARN("MobilityModule: Value of waitTime not found, using default: %f", DEFAULT_WAIT_TIME);
-        }
-        waitTime = DEFAULT_WAIT_TIME;
-    }
-    searchTimeElapsed = 0.0f;
     publisher = nodeHandlePublic->advertise<geometry_msgs::Twist>(DRIVES_TOPIC_NAME, 1);
     state = Stop;
     if(logLevel <= Info) {
@@ -89,7 +74,7 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
     return true;
 }
 
-void MobilityModule::Update(double timeElapsed) {
+void MobilityModule::Update() {
     switch (state) {
         case Stop:
             StopStateUpdate();
@@ -97,23 +82,17 @@ void MobilityModule::Update(double timeElapsed) {
         case FollowUser:
             FollowUserStateUpdate();
             break;
-        case SearchForUser:
-            SearchForUserStateUpdate(timeElapsed);
+        case SearchForUserLeft:
+            SearchForUserStateUpdate(false);
+            break;
+        case SearchForUserRight:
+            SearchForUserStateUpdate(true);
             break;
     }
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Task functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-DrivesState MobilityModule::GetState() {
-    return state;
-}
-
 void MobilityModule::SetState(DrivesState newState) {
     state = newState;
-    searchTimeElapsed = 0.0f;
     if(logLevel <= Info) {
         ROS_INFO("MobilityModule: New state: %d", newState);
     }
@@ -123,101 +102,66 @@ void MobilityModule::SetState(DrivesState newState) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//System functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//...
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Task functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void MobilityModule::StopStateUpdate() {
     geometry_msgs::Twist velocity;
     velocity.linear.x = 0;
     velocity.angular.z = 0;
-    if(logLevel <= Debug) {
-        ROS_DEBUG("MobilityModule: state == %d", state);
-        ROS_DEBUG("MobilityModule: Publishing velocity: linear_X= %f; angular_Z=  %f;", velocity.linear.x, velocity.angular.z);
-    }
     publisher.publish(velocity);
 }
 
 void MobilityModule::FollowUserStateUpdate() {
     if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
-        if(logLevel <= Debug){
-            ROS_DEBUG("MobilityModule: User lost");
+        geometry_msgs::Twist velocity;
+        velocity.linear.x = 0;
+        velocity.angular.z = 0;
+        publisher.publish(velocity);
+        if(logLevel <= Warn){
+            ROS_WARN("MobilityModule: No user to follow");
         }
-        SetState(SearchForUser);
     }
     else {
         geometry_msgs::Twist velocity;
-        lastUserLocation.X = 0.0f;
-        lastUserLocation.Z = 0.0f;
-        SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), lastUserLocation);
-        if(lastUserLocation.Z == 0.0f) {
-            if(logLevel <= Warn) {
-                ROS_WARN("MobilityModule: Invalid user location");
-            }
-        }
-        if(lastUserLocation.Z > distanceToKeep) {
-            velocity.linear.x = ((lastUserLocation.Z-distanceToKeep)/maxLinearSpeedDistance)*maxLinearSpeed;
+        XnPoint3D currentUserLocation;
+        currentUserLocation.X = 0.0f;
+        currentUserLocation.Z = 0.0f;
+        SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), currentUserLocation);
+        if(currentUserLocation.Z > distanceToKeep) {
+            velocity.linear.x = ((currentUserLocation.Z-distanceToKeep)/maxLinearSpeedDistance)*maxLinearSpeed;
             if(velocity.linear.x > maxLinearSpeed) {
                 velocity.linear.x = maxLinearSpeed;
             }
         }
-        if(lastUserLocation.X > positionTolerance) {
-            velocity.angular.z = ((lastUserLocation.X-positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed;
-            if(velocity.angular.z > maxAngularSpeed) {
-                velocity.angular.z = maxAngularSpeed;
-            }
-        }
-        else if(lastUserLocation.X < -positionTolerance) {
-            velocity.angular.z = ((lastUserLocation.X+positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed;
+        if(currentUserLocation.X > positionTolerance) {
+            velocity.angular.z = -(((currentUserLocation.X-positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed);
             if(velocity.angular.z < -maxAngularSpeed) {
                 velocity.angular.z = -maxAngularSpeed;
             }
         }
-        if(logLevel <= Debug) {
-            ROS_DEBUG("MobilityModule: state == %d", state);
-            ROS_DEBUG("MobilityModule: Publishing velocity: linear_X= %f; angular_Z=  %f;", velocity.linear.x, velocity.angular.z);
-            ROS_DEBUG("MobilityModule: currentUserLocation: X= %f; Z= %f;", lastUserLocation.X, lastUserLocation.Z);
+        else if(currentUserLocation.X < -positionTolerance) {
+            velocity.angular.z = -(((currentUserLocation.X+positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed);
+            if(velocity.angular.z > maxAngularSpeed) {
+                velocity.angular.z = maxAngularSpeed;
+            }
         }
         publisher.publish(velocity);
     }
 }
 
-void MobilityModule::SearchForUserStateUpdate(double timeElapsed) {
+void MobilityModule::SearchForUserStateUpdate(bool clockwiseRotation) {
     geometry_msgs::Twist velocity;
     velocity.linear.x = 0;
     velocity.angular.z = 0;
-    searchTimeElapsed += timeElapsed;
-    if(searchTimeElapsed >= searchTimeLimit && DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
-        if(logLevel <= Debug) {
-            ROS_DEBUG("MobilityModule: Search failed");
+    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER){
+        if(logLevel <= Warn) {
+            ROS_WARN("MobilityModule: User present while searching");
         }
-        SetState(Stop);
-    }
-    else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER){
-        if(logLevel <= Debug) {
-            ROS_DEBUG("MobilityModule: User found");
-        }
-        SetState(FollowUser);
     }
     else {
-        if(searchTimeElapsed > waitTime) {
-            if(lastUserLocation.X > 0) {
-                velocity.angular.z = maxAngularSpeed/2;
-            }
-            else
-            {
-                velocity.angular.z = -maxAngularSpeed/2;
-            }
+        if(clockwiseRotation) {
+            velocity.angular.z = -maxAngularSpeed/2;
         }
-        if(logLevel <= Debug) {
-            ROS_DEBUG("MobilityModule: state == %d", state);
-            ROS_DEBUG("MobilityModule: Publishing velocity: linear_X= %f; angular_Z=  %f;", velocity.linear.x, velocity.angular.z);
-            ROS_DEBUG("MobilityModule: lastUserLocation: X= %f; Z= %f;", lastUserLocation.X, lastUserLocation.Z);
-            ROS_DEBUG("MobilityModule: Search time: ");
+        else {
+            velocity.angular.z = maxAngularSpeed/2;
         }
     }
     publisher.publish(velocity);

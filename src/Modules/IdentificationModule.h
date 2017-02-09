@@ -12,38 +12,31 @@
 #include "IdentificationMethods/IdentificationMethod.h"
 #include "IdentificationMethods/UserID_Method.h"
 
+enum IdentificationStates {
+    NoTemplate, PresentTemplate
+};
 
 class IdentificationModule {
 public:
-    //System functions
     static IdentificationModule &GetInstance() {
         static IdentificationModule instance;
         return instance;
     }
     bool Initialize(ros::NodeHandle *nodeHandlePrivate);
     void Update();
-
-    //Task functions
     void ClearTemplate();
     bool SaveTemplateOfCurrentUser();
 
 private:
-    //System fields
     LogLevels logLevel;
     double identificationThreshold;
-    bool isTemplateSaved;
-
-    //Task fields
+    IdentificationStates state;
     UserID_Method userID_method;
 
-    //System functions
     IdentificationModule() {}
     IdentificationModule(const IdentificationModule &);
     IdentificationModule &operator=(const IdentificationModule &);
     ~IdentificationModule() {}
-
-    //Task functions
-    //...
 };
 
 #endif //ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H

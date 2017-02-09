@@ -5,8 +5,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Public
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//System functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
     int _logLevel;
     if(!nodeHandlePrivate->getParam("taskModuleLogLevel", _logLevel)) {
@@ -33,6 +31,25 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
                 break;
         }
     }
+    if(!nodeHandlePrivate->getParam("searchTimeLimit", searchTimeLimit)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("TaskModule: Value of searchTimeLimit not found, using default: %f", DEFAULT_SEARCH_TIME_LIMIT);
+        }
+        searchTimeLimit = DEFAULT_SEARCH_TIME_LIMIT;
+    }
+    if(!nodeHandlePrivate->getParam("waitTimeLimit", waitTimeLimit)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("TaskModule: Value of waitTimeLimit not found, using default: %f", DEFAULT_WAIT_TIME_LIMIT);
+        }
+        waitTimeLimit = DEFAULT_WAIT_TIME_LIMIT;
+    }
+    if(!nodeHandlePrivate->getParam("maxUserDistance", maxUserDistance)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("TaskModule: Value of maxUserDistance not found, using default: %f", DEFAULT_MAX_USER_DISTANCE);
+        }
+        maxUserDistance = DEFAULT_MAX_USER_DISTANCE;
+    }
+    timeElapsed = 0.0;
     state = Idle;
     if(logLevel <= Info) {
         ROS_INFO("TaskModule: initialized");
@@ -41,7 +58,7 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
     return true;
 }
 
-void TaskModule::Update() {
+void TaskModule::Update(double _timeElapsed) {
     switch (state) {
         case Idle:
             IdleStateUpdate();
@@ -52,7 +69,12 @@ void TaskModule::Update() {
         case Following:
             FollowingStateUpdate();
             break;
+        case Waiting:
+            timeElapsed += _timeElapsed;
+            WaitingStateUpdate();
+            break;
         case Searching:
+            timeElapsed += _timeElapsed;
             SearchingStateUpdate();
             break;
     }
@@ -60,28 +82,16 @@ void TaskModule::Update() {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Task functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//...
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//System functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//...
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Task functions
+//State change
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TaskModule::BecomeIdle() {
     state = Idle;
     MobilityModule::GetInstance().SetState(Stop);
     IdentificationModule::GetInstance().ClearTemplate();
-    DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
     SensorsModule::GetInstance().ChangeStateTo(Off);
+    DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
     if(logLevel <= Info) {
         ROS_INFO("TaskModule: Becoming idle");
     }
@@ -98,10 +108,11 @@ void TaskModule::AwaitRegistration() {
     }
 }
 
-void TaskModule::BeginFollowing() {
+void TaskModule::SaveTemplate() {
     if(IdentificationModule::GetInstance().SaveTemplateOfCurrentUser()) {
         state = Following;
         MobilityModule::GetInstance().SetState(FollowUser);
+        SensorsModule::GetInstance().ChangeStateTo(Working);
         if(logLevel <= Info) {
             ROS_INFO("TaskModule: Begin following user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
         }
@@ -110,7 +121,8 @@ void TaskModule::BeginFollowing() {
         if(logLevel <= Info) {
             ROS_INFO("TaskModule: Failed template creation for user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
         }
-        AwaitRegistration();
+        DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
+        SensorsModule::GetInstance().ClearCalibration();
     }
 
 }
@@ -123,59 +135,107 @@ void TaskModule::ResumeFollowing() {
     }
 }
 
+void TaskModule::WaitForReturn() {
+    state = Waiting;
+    timeElapsed = 0.0;
+    MobilityModule::GetInstance().SetState(Stop);
+}
+
 void TaskModule::Search() {
     state = Searching;
-    MobilityModule::GetInstance().SetState(SearchForUser);
+    timeElapsed = 0.0;
+    if(lastUserPosition.X > 0) {
+        MobilityModule::GetInstance().SetState(SearchForUserRight);
+    }
+    else {
+        MobilityModule::GetInstance().SetState(SearchForUserLeft);
+    }
     if(logLevel <= Info) {
         ROS_INFO("TaskModule: Searching for user");
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//State update
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TaskModule::IdleStateUpdate() {
     if(false) {
         //TODO: przejście w stan rejestracji na podstawie danych z topica
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering awaiting from idle");
+        }
         AwaitRegistration();
-    }
-    else if(logLevel <= Debug) {
-        ROS_DEBUG("TaskModule: state == %d", state);
-        ROS_DEBUG("TaskModule: Idle. CurrentUserXnId= %d", DataStorage::GetInstance().GetCurrentUserXnId());
     }
 }
 
 void TaskModule::AwaitingStateUpdate() {
     if(false){
         //TODO: przejście w stan Idle na podstawie danych z topica
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering idle from awaiting");
+        }
         BecomeIdle();
     }
     else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
-        BeginFollowing();
-    }
-    else {
-        if(logLevel <= Debug) {
-            ROS_DEBUG("TaskModule: state == %d", state);
-            ROS_DEBUG("TaskModule: Awaiting registration");
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering template save state from awaiting");
         }
+        SaveTemplate();
     }
 }
 
 void TaskModule::FollowingStateUpdate() {
     if(false) {
         //TODO: przejście w stan Idle na podstawie danych z topica
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering idle from following");
+        }
         BecomeIdle();
     }
-    else if(false ||
-            (DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER &&
-                    DataStorage::GetInstance().IsUserPose(DataStorage::GetInstance().GetCurrentUserXnId() - 1))) {
-        //TODO: przejście w stan rejestracji na podstawie danych z topica
+    else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER && DataStorage::GetInstance().IsUserPose(DataStorage::GetInstance().GetCurrentUserXnId() - 1)) {
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering awaiting from following");
+        }
         AwaitRegistration();
     }
     else if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
-        Search();
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering waiting from following");
+        }
+        WaitForReturn();
+    }
+}
+
+void TaskModule::WaitingStateUpdate() {
+    if(false) {
+        //TODO: przejście w stan Idle na podstawie danych z topica
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering idle from waiting");
+        }
+        BecomeIdle();
+    }
+    else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
+        ResumeFollowing();
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering following from waiting");
+        }
     }
     else {
-        if(logLevel <= Debug) {
-            ROS_DEBUG("TaskModule: state == %d", state);
-            ROS_DEBUG("TaskModule: Following. CurrentUserXnId= %d", DataStorage::GetInstance().GetCurrentUserXnId());
+        if(lastUserPosition.Z > maxUserDistance) {
+            if( timeElapsed >= waitTimeLimit) {
+                Search();
+                if(logLevel <= Info) {
+                    ROS_INFO("TaskModule: Entering search from long waiting");
+                }
+            }
+        }
+        else {
+            if( timeElapsed >= waitTimeLimit/2) {
+                Search();
+                if(logLevel <= Info) {
+                    ROS_INFO("TaskModule: Entering search from short waiting");
+                }
+            }
         }
     }
 }
@@ -184,18 +244,20 @@ void TaskModule::SearchingStateUpdate() {
     if(false) {
         //TODO: przejście w stan Idle na podstawie danych z topica
         BecomeIdle();
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering idle from search");
+        }
     }
-    else if(false || (DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER && MobilityModule::GetInstance().GetState() == Stop)) {
-        //TODO: przejście w stan rejestracji na podstawie danych z topica
+    else if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER && timeElapsed >= searchTimeLimit) {
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering awaiting from search");
+        }
         AwaitRegistration();
     }
     else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
-        ResumeFollowing();
-    }
-    else {
-        if(logLevel <= Debug) {
-            ROS_DEBUG("TaskModule: state == %d", state);
-            ROS_DEBUG("TaskModule: Searching");
+        if(logLevel <= Info) {
+            ROS_INFO("TaskModule: Entering following from search");
         }
+        ResumeFollowing();
     }
 }

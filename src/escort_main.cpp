@@ -127,8 +127,8 @@ void Update() {
     //TODO: topic module update
     SensorsModule::GetInstance().Update();
     IdentificationModule::GetInstance().Update();
-    TaskModule::GetInstance().Update();
-    MobilityModule::GetInstance().Update(mainLoopTime);
+    TaskModule::GetInstance().Update(mainLoopTime);
+    MobilityModule::GetInstance().Update();
     DataStorage::GetInstance().Update(mainLoopTime);
 }
 

@@ -4,8 +4,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Public
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//System functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
     int _logLevel;
     if(!nodeHandlePrivate->getParam("sensorsModuleLogLevel", _logLevel)) {
@@ -86,8 +84,7 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
     return true;
 }
 
-void SensorsModule::Update()
-{
+void SensorsModule::Update() {
     context.WaitAnyUpdateAll();
 }
 
@@ -115,41 +112,30 @@ SensorsState SensorsModule::GetState() {
     return state;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Task functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void SensorsModule::ChangeStateTo(SensorsState newState) {
     stateMutex.lock();
+    if(state == newState) {
+        if(logLevel <= Warn) {
+            ROS_WARN("SensorsModule: Attempted state change to same state: %d", state);
+        }
+    }
     ExitState(state);
     EnterState(newState);
-    state = newState;
-    stateMutex.unlock();
     if(logLevel <= Info) {
         ROS_INFO("SensorsModule: State change to: %d", state);
     }
+    stateMutex.unlock();
 }
 
-void SensorsModule::UnsafeChangeStateTo(SensorsState newState) {
-    ExitState(state);
-    EnterState(newState);
-    state = newState;
-    if(logLevel <= Info) {
-        ROS_INFO("SensorsModule: Unsafe state change to: %d", state);
-    }
+void SensorsModule::ClearCalibration() {
+    stateMutex.lock();
+    userGenerator.GetSkeletonCap().ClearCalibrationData(CALIBRATION_SLOT);
+    stateMutex.unlock();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//System functions
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//...
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Task functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void SensorsModule::ExitState(SensorsState state) {
     XnUInt16 numberOfUsers = userGenerator.GetNumberOfUsers();
@@ -169,15 +155,16 @@ void SensorsModule::ExitState(SensorsState state) {
                 userGenerator.GetPoseDetectionCap().StopPoseDetection(userIds[i]);
                 userGenerator.GetSkeletonCap().StopTracking(userIds[i]);
             }
+            userGenerator.GetSkeletonCap().ClearCalibrationData(CALIBRATION_SLOT);
             break;
     }
 }
 
-void SensorsModule::EnterState(SensorsState state) {
+void SensorsModule::EnterState(SensorsState newState) {
     XnUInt16 numberOfUsers = userGenerator.GetNumberOfUsers();
     XnUserID userIds[numberOfUsers];
     userGenerator.GetUsers(userIds, numberOfUsers);
-    switch (state) {
+    switch (newState) {
         case Off:
             break;
         case Calibrating:
@@ -186,13 +173,23 @@ void SensorsModule::EnterState(SensorsState state) {
             }
             break;
         case Working:
-            for(int i=0; i < numberOfUsers; ++i) {
-                userGenerator.GetPoseDetectionCap().StartPoseDetection(CALIBRATION_POSE, userIds[i]);
-                userGenerator.GetSkeletonCap().LoadCalibrationData(userIds[i], CALIBRATION_SLOT);
-                userGenerator.GetSkeletonCap().StartTracking(userIds[i]);
+            if(!userGenerator.GetSkeletonCap().IsCalibrationData(CALIBRATION_SLOT)) {
+                if(SensorsModule::GetInstance().GetLogLevel() <= Error) {
+                    ROS_ERROR("SensorsModule: no calibration data present");
+                    EnterState(Off);
+                    return;
+                }
+            }
+            else {
+                for (int i = 0; i < numberOfUsers; ++i) {
+                    userGenerator.GetPoseDetectionCap().StartPoseDetection(CALIBRATION_POSE, userIds[i]);
+                    userGenerator.GetSkeletonCap().LoadCalibrationData(userIds[i], CALIBRATION_SLOT);
+                    userGenerator.GetSkeletonCap().StartTracking(userIds[i]);
+                }
             }
             break;
     }
+    state = newState;
 }
 
 void SensorsModule::LoadCalibrationDataForUser(XnUserID userId) {
@@ -266,7 +263,7 @@ void SensorsModule::UserPose_PoseDetected(xn::PoseDetectionCapability& capabilit
         ROS_DEBUG("SensorsModule: User: %d- pose detected", userId);
     }
     if (SensorsModule::GetInstance().GetState() == Calibrating) {
-        if(DataStorage::GetInstance().IsPoseCooldownPassed(userId-1) && !SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().IsCalibrating(userId)) {
+        if(DataStorage::GetInstance().IsPoseCooldownPassed(userId-1)) {
             SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().RequestCalibration(userId, TRUE);
         }
     }
@@ -290,12 +287,11 @@ void SensorsModule::UserCalibration_CalibrationComplete(xn::SkeletonCapability& 
         if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
             ROS_DEBUG("SensorsModule: User: %d- calibration successful", userId);
         }
-        if(SensorsModule::GetInstance().GetState() == Calibrating) {
+        if(SensorsModule::GetInstance().GetState() == Calibrating && !SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().IsCalibrationData(CALIBRATION_SLOT)) {
             if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
                 ROS_DEBUG("SensorsModule: User: %d- saved calibration data", userId);
             }
             SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().SaveCalibrationData(userId, CALIBRATION_SLOT);
-            SensorsModule::GetInstance().UnsafeChangeStateTo(Working);
             DataStorage::GetInstance().SetCurrentUserXnId(userId);
         }
     }

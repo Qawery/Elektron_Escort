@@ -13,16 +13,12 @@
 
 class DataStorage {
 public:
-    //System functions
     static DataStorage& GetInstance() {
         static DataStorage instance;
         return instance;
     }
     bool Initialize(ros::NodeHandle* nodeHandlePrivate);
     void Update(double timeElapsed);
-    //TODO: wiadomości sterujące
-
-    //Task functions
     XnUserID GetCurrentUserXnId();
     void SetCurrentUserXnId(XnUserID newCurrentUserXnId);
     void UserNew(XnUserID userId);
@@ -34,28 +30,19 @@ public:
     bool IsPresentOnScene(XnUserID userId);
 
 private:
-    //System fields
     LogLevels logLevel;
     int maxUsers;
     float poseCooldownTime;
-    //TODO: czy jest nowa wiadomość sterująca
-    //TODO: wiadomość sterująca
-
-    //Task fields
     XnUserID currentUserXnId;
     std::vector<bool> userPose;
     std::vector<float> poseCooldown;
     std::set<XnUserID> presentUsers;
 
-    //System functions
     DataStorage() {}
     DataStorage(const DataStorage &);
     DataStorage& operator=(const DataStorage&);
     ~DataStorage() {}
     void UpdateUserData(double timeElapsed);
-
-    //Task functions
-    //...
 };
 
 #endif //ELEKTRON_ESCORT_DATASTORAGE_H
