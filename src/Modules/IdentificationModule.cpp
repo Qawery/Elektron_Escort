@@ -54,6 +54,8 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
 void IdentificationModule::Update()
 {
     if(isTemplateSaved) {
+        //TODO: pozostałe metody
+        userID_method.Update();
         XnUInt16 numberOfUsers = SensorsModule::GetInstance().GetUserGenerator().GetNumberOfUsers();
         XnUserID userIds[numberOfUsers];
         SensorsModule::GetInstance().GetUserGenerator().GetUsers(userIds, numberOfUsers);
@@ -61,6 +63,7 @@ void IdentificationModule::Update()
         for (int i = 0; i < numberOfUsers; ++i) {
             usersRanking[i] = 0.0f;
             if(DataStorage::GetInstance().IsPresentOnScene(userIds[i])) {
+                //TODO: pozostałe metody
                 usersRanking[i] += userID_method.trustValue * userID_method.RateUser(userIds[i]);
             }
         }
@@ -75,9 +78,8 @@ void IdentificationModule::Update()
         } else {
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
         }
-        for (int i = 0; i < numberOfUsers; ++i) {
-            userID_method.LateUpdate();
-        }
+        //TODO: pozostałe metody
+        userID_method.LateUpdate();
     }
 }
 

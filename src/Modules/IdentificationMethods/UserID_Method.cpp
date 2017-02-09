@@ -19,8 +19,8 @@ void UserID_Method::Update() {
 
 }
 
-float UserID_Method::RateUser(XnUserID userId) {
-    if(previousId == userId) {
+double UserID_Method::RateUser(XnUserID userId) {
+    if(previousId != NO_USER && previousId == userId) {
         return 1.0f;
     }
     else {
@@ -29,7 +29,5 @@ float UserID_Method::RateUser(XnUserID userId) {
 }
 
 void UserID_Method::LateUpdate() {
-    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
-        previousId = DataStorage::GetInstance().GetCurrentUserXnId();
-    }
+    previousId = DataStorage::GetInstance().GetCurrentUserXnId();
 }

@@ -50,6 +50,12 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
         }
         maxAngularSpeed = DEFULT_MAX_ANGULAR_SPEED;
     }
+    if(!nodeHandlePrivate->getParam("maxAngularSpeedDistance", maxAngularSpeedDistance)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("MobilityModule: Value of maxAngularSpeedDistance not found, using default: %d", DEFAULT_MAX_ANGULAR_SPEED_DISTANCE);
+        }
+        maxAngularSpeedDistance = DEFAULT_MAX_ANGULAR_SPEED_DISTANCE;
+    }
     if(!nodeHandlePrivate->getParam("maxLinearSpeed", maxLinearSpeed)) {
         if(logLevel <= Warn) {
             ROS_WARN("MobilityModule: Value of maxLinearSpeed not found, using default: %d", DEFAULT_MAX_LINEAR_SPEED);
@@ -61,12 +67,6 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
             ROS_WARN("MobilityModule: Value of maxLinearSpeedDistance not found, using default: %d", DEFAULT_MAX_LINEAR_SPEED_DISTANCE);
         }
         maxLinearSpeedDistance = DEFAULT_MAX_LINEAR_SPEED_DISTANCE;
-    }
-    if(!nodeHandlePrivate->getParam("maxAngularSpeedDistance", maxAngularSpeedDistance)) {
-        if(logLevel <= Warn) {
-            ROS_WARN("MobilityModule: Value of maxAngularSpeedDistance not found, using default: %d", DEFAULT_MAX_ANGULAR_SPEED_DISTANCE);
-        }
-        maxAngularSpeedDistance = DEFAULT_MAX_ANGULAR_SPEED_DISTANCE;
     }
     if(!nodeHandlePrivate->getParam("searchTimeLimit", searchTimeLimit)) {
         if(logLevel <= Warn) {

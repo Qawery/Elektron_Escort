@@ -9,7 +9,7 @@ public:
     void ClearTemplate();
     bool SaveTemplate();
     void Update();
-    float RateUser(XnUserID userId);
+    double RateUser(XnUserID userId);
     void LateUpdate();
 
 private:

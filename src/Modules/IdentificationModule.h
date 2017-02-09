@@ -2,8 +2,8 @@
 #define ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H
 
 #define DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL Info
-#define DEFAULT_IDENTIFICATION_THRESHOLD 0.5f
-#define DEFAULT_USER_ID_METHOD_TRUST 1.0f
+#define DEFAULT_IDENTIFICATION_THRESHOLD 0.5
+#define DEFAULT_USER_ID_METHOD_TRUST 1.0
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -30,7 +30,7 @@ public:
 private:
     //System fields
     LogLevels logLevel;
-    float identificationThreshold;
+    double identificationThreshold;
     bool isTemplateSaved;
 
     //Task fields

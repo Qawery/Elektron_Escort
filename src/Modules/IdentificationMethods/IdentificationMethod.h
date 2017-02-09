@@ -8,11 +8,11 @@
 
 class IdentificationMethod {
 public:
-    float trustValue = 0.0f;
+    double trustValue = 0.0;
     virtual void ClearTemplate()=0;
     virtual bool SaveTemplate()=0;
     virtual void Update()=0;
-    virtual float RateUser(XnUserID userId)=0;
+    virtual double RateUser(XnUserID userId)=0;
     virtual void LateUpdate()=0;
 };
 

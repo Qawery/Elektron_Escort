@@ -2,19 +2,30 @@
 	<master auto="start"/>
 	<node pkg="elektron_escort" type="escort_main" respawn="false" name="escort_main" output="screen">
 
-        <param name="escortMainLogLevel" type="int" value="0"/>
-		<param name="mainLoopRate" type="double" value="30.0"/>
+        <param name="escortMainLogLevel" type="int" value="1"/>
+	<param name="mainLoopRate" type="double" value="30.0"/>
 
-		<param name="dataStorageLogLevel" type="int" value="0"/>
-		<param name="maxUsers" type="int" value="3"/>
-		<param name="poseCooldownTime" type="double" value="3.0"/>
+        <param name="mobilityModuleLogLevel" type="int" value="1"/>
+        <param name="distanceToKeep" type="double" value="2000"/>
+        <param name="positionTolerance" type="double" value="100"/>
+        <param name="maxAngularSpeed" type="double" value="100"/>
+        <param name="maxAngularSpeedDistance" type="double" value="500"/>
+        <param name="maxLinearSpeed" type="double" value="100"/>
+        <param name="maxLinearSpeedDistance" type="double" value="1000"/>
+        <param name="searchTimeLimit" type="double" value="5.0"/>
+        <param name="waitTime" type="double" value="10.0"/>
 
         <param name="sensorsModuleLogLevel" type="int" value="0"/>
 
-        <param name="identificationModuleLogLevel" type="int" value="0"/>
+        <param name="identificationModuleLogLevel" type="int" value="1"/>
+        <param name="identificationThreshold" type="double" value="0.5"/>
+        <param name="userID_MethodTrust" type="double" value="1.0"/>
 
-        <param name="locomotionModuleLogLevel" type="int" value="0"/>
+        <param name="taskModuleLogLevel" type="int" value="1"/>
 
+	<param name="dataStorageLogLevel" type="int" value="1"/>
+	<param name="maxUsers" type="int" value="3"/>
+	<param name="poseCooldownTime" type="double" value="3.0"/>
 
 	</node>
 </launch>
