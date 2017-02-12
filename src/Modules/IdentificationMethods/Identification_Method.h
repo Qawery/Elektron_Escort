@@ -6,7 +6,7 @@
 #include "../DataStorage.h"
 
 
-class IdentificationMethod {
+class Identification_Method {
 public:
     double trustValue = 0.0;
     virtual void ClearTemplate()=0;

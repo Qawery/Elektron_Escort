@@ -1,10 +1,10 @@
 #ifndef ELEKTRON_ESCORT_USERID_METHOD_H
 #define ELEKTRON_ESCORT_USERID_METHOD_H
 
-#include "IdentificationMethod.h"
+#include "Identification_Method.h"
 
 
-class UserID_Method : public IdentificationMethod {
+class UserID_Method : public Identification_Method {
 public:
     void ClearTemplate();
     bool SaveTemplate();

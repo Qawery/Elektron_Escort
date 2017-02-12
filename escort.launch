@@ -13,9 +13,9 @@
         <param name="maxLinearSpeed" type="double" value="100"/>
         <param name="maxLinearSpeedDistance" type="double" value="1000"/>
 
-        <param name="sensorsModuleLogLevel" type="int" value="0"/>
+        <param name="sensorsModuleLogLevel" type="int" value="1"/>
 
-        <param name="identificationModuleLogLevel" type="int" value="1"/>
+        <param name="identificationModuleLogLevel" type="int" value="0"/>
         <param name="identificationThreshold" type="double" value="0.5"/>
         <param name="userID_MethodTrust" type="double" value="1.0"/>
 

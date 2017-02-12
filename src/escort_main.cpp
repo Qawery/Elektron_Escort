@@ -136,6 +136,7 @@ void Finish() {
 	delete nodeHandlePublic;
 	delete nodeHandlePrivate;
     SensorsModule::GetInstance().Finish();
+    IdentificationModule::GetInstance().Finish();
 }
 
 int main(int argc, char **argv) {

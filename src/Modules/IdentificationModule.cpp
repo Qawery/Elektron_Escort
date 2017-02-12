@@ -42,10 +42,22 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
         }
         userID_method.trustValue = DEFAULT_USER_ID_METHOD_TRUST;
     }
+    height_method = new Height_Method();
+    if(!nodeHandlePrivate->getParam("height_MethodTrust", height_method->trustValue)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("IdentificationModule: Trust value for height method not found, using default: %f", DEFAULT_USER_ID_METHOD_TRUST);
+        }
+        height_method->trustValue = DEFAULT_HEIGHT_METHOD_TRUST;
+    }
     if(logLevel <= Info) {
         ROS_INFO("IdentificationModule: initialized");
     }
     state = NoTemplate;
+
+    //DEBUG
+    printStatusCooldown = 0.0;
+    printStatusTime = 30.0;
+
     return true;
 }
 
@@ -53,6 +65,7 @@ void IdentificationModule::Update()
 {
     if(state == PresentTemplate) {
         userID_method.Update();
+        //height_method.Update();
         XnUInt16 numberOfUsers = SensorsModule::GetInstance().GetUserGenerator().GetNumberOfUsers();
         XnUserID userIds[numberOfUsers];
         SensorsModule::GetInstance().GetUserGenerator().GetUsers(userIds, numberOfUsers);
@@ -62,6 +75,7 @@ void IdentificationModule::Update()
                 usersRanking[i] = 0.0f;
                 if (DataStorage::GetInstance().IsPresentOnScene(userIds[i])) {
                     usersRanking[i] += userID_method.trustValue * userID_method.RateUser(userIds[i]);
+                    //usersRanking[i] += height_method.trustValue * height_method.RateUser(userIds[i]);
                 }
             }
             int favouriteIndex = 0;
@@ -70,7 +84,7 @@ void IdentificationModule::Update()
                     favouriteIndex = i;
                 }
             }
-            if (usersRanking[favouriteIndex] > identificationThreshold) {
+            if (usersRanking[favouriteIndex] >= identificationThreshold) {
                 DataStorage::GetInstance().SetCurrentUserXnId(userIds[favouriteIndex]);
             }
             else {
@@ -81,11 +95,20 @@ void IdentificationModule::Update()
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
         }
         userID_method.LateUpdate();
+        //height_method.LateUpdate();
     }
+
+    //DEBUG
+    PrintStatus();
+}
+
+void IdentificationModule::Finish() {
+    delete height_method;
 }
 
 void IdentificationModule::ClearTemplate() {
     userID_method.ClearTemplate();
+    //height_method.ClearTemplate();
     state = NoTemplate;
     if(logLevel <= Info) {
         ROS_INFO("IdentificationModule: template cleared");
@@ -95,6 +118,7 @@ void IdentificationModule::ClearTemplate() {
 bool IdentificationModule::SaveTemplateOfCurrentUser() {
     bool savingResult = true;
     savingResult = savingResult && userID_method.SaveTemplate();
+    //savingResult = savingResult && height_method.SaveTemplate();
     if(savingResult) {
         state = PresentTemplate;
         if(logLevel <= Info) {
@@ -114,3 +138,22 @@ bool IdentificationModule::SaveTemplateOfCurrentUser() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+void IdentificationModule::PrintStatus() {
+    if(printStatusCooldown <= 0) {
+        printStatusCooldown = printStatusTime;
+        if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
+            XnPoint3D position;
+            SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), position);
+            double height = 0.0;
+            Height_Method* heightMethodPointer = (Height_Method*) height_method;
+            std::cout << "User position- X: " << position.X << "; Y: " << position.Y << "; Z: " << position.Z << "; Height: " << height << "\n";
+            std::cout << "Current height: " << heightMethodPointer->CalculateHeight(DataStorage::GetInstance().GetCurrentUserXnId()) << "\n";
+        }
+        else {
+            std::cout << "No user" << "\n";
+        }
+    }
+    else {
+        --printStatusCooldown;
+    }
+}

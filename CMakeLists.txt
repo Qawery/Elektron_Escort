@@ -26,6 +26,7 @@ add_message_files(
 catkin_package(CATKIN_DEPENDS message_runtime)
 
 include_directories(${catkin_INCLUDEDIR}
+            IdentificationMethods
 		    ${OpenNI_INCLUDEDIR}
 		    ${orocos_kdl_INCLUDE_DIRS})
 
@@ -39,6 +40,7 @@ add_executable(escort_main src/escort_main.cpp
         src/Modules/DataStorage.cpp
         src/Modules/IdentificationModule.cpp
 		src/Modules/IdentificationMethods/UserID_Method.cpp
+        src/Modules/IdentificationMethods/Height_Method.cpp
 		)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
