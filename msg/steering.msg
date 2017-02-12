@@ -1,0 +1,6 @@
+bool idle
+int8 DataStorageLogLevel
+int8 IdentificationModuleLogLevel
+int8 MobilityModuleLogLevel
+int8 SensorsModuleLogLevel
+int8 TaskModuleLogLevel

@@ -7,7 +7,9 @@ find_package(catkin REQUIRED COMPONENTS
 					geometry_msgs
 					roscpp
 					roslib
-					tf)
+					tf
+                    message_generation
+        )
 
 add_definitions("-std=gnu++11")
 
@@ -15,7 +17,13 @@ add_definitions("-std=gnu++11")
 find_package(PkgConfig)
 pkg_check_modules(OpenNI REQUIRED libopenni)
 
-catkin_package()
+add_message_files(
+        FILES
+        methods.msg
+        steering.msg
+)
+
+catkin_package(CATKIN_DEPENDS message_runtime)
 
 include_directories(${catkin_INCLUDEDIR}
 		    ${OpenNI_INCLUDEDIR}
