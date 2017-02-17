@@ -12,7 +12,6 @@
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
 #include "../Common.h"
-#include "TaskModule.h"
 #include "DataStorage.h"
 
 

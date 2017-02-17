@@ -20,7 +20,7 @@
 
 
 enum DrivesState {
-    Stop, FollowUser, SearchForUserLeft, SearchForUserRight
+    Stop, FollowUser, SearchForUser
 };
 
 class MobilityModule {
@@ -50,7 +50,7 @@ private:
     ~MobilityModule() {}
     void StopStateUpdate();
     void FollowUserStateUpdate();
-    void SearchForUserStateUpdate(bool clockwiseRotation);
+    void SearchForUserStateUpdate();
 };
 
 #endif //ELEKTRON_ESCORT_MOBILITY_MODULE_H

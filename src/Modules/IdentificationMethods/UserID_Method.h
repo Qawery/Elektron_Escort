@@ -4,10 +4,11 @@
 #include "Identification_Method.h"
 
 
-class UserID_Method : public Identification_Method {
+class UserID_Method: public Identification_Method {
 public:
     void ClearTemplate();
-    bool SaveTemplate();
+    void BeginSaveTemplate();
+    void ContinueSaveTemplate();
     void Update();
     double RateUser(XnUserID userId);
     void LateUpdate();

@@ -82,19 +82,16 @@ void MobilityModule::Update() {
         case FollowUser:
             FollowUserStateUpdate();
             break;
-        case SearchForUserLeft:
-            SearchForUserStateUpdate(false);
-            break;
-        case SearchForUserRight:
-            SearchForUserStateUpdate(true);
+        case SearchForUser:
+            SearchForUserStateUpdate();
             break;
     }
 }
 
 void MobilityModule::SetState(DrivesState newState) {
     state = newState;
-    if(logLevel <= Info) {
-        ROS_INFO("MobilityModule: New state: %d", newState);
+    if(logLevel <= Debug) {
+        ROS_DEBUG("MobilityModule: New state: %d", newState);
     }
 }
 
@@ -147,7 +144,7 @@ void MobilityModule::FollowUserStateUpdate() {
     }
 }
 
-void MobilityModule::SearchForUserStateUpdate(bool clockwiseRotation) {
+void MobilityModule::SearchForUserStateUpdate() {
     geometry_msgs::Twist velocity;
     velocity.linear.x = 0;
     velocity.angular.z = 0;
@@ -157,7 +154,7 @@ void MobilityModule::SearchForUserStateUpdate(bool clockwiseRotation) {
         }
     }
     else {
-        if(clockwiseRotation) {
+        if(DataStorage::GetInstance().GetLastUserPosition().X >= 0) {
             velocity.angular.z = -maxAngularSpeed/2;
         }
         else {

@@ -9,6 +9,7 @@
 #include <ros/ros.h>
 #include <XnCppWrapper.h>
 #include "../Common.h"
+#include "SensorsModule.h"
 
 
 class DataStorage {
@@ -28,6 +29,7 @@ public:
     bool IsUserPose(int userId);
     bool IsPoseCooldownPassed(int userId);
     bool IsPresentOnScene(XnUserID userId);
+    XnPoint3D GetLastUserPosition();
 
 private:
     LogLevels logLevel;
@@ -37,6 +39,7 @@ private:
     std::vector<bool> userPose;
     std::vector<float> poseCooldown;
     std::set<XnUserID> presentUsers;
+    XnPoint3D lastUserPosition;
 
     DataStorage() {}
     DataStorage(const DataStorage &);

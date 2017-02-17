@@ -8,19 +8,21 @@ void UserID_Method::ClearTemplate() {
     originalId = NO_USER;
 }
 
-bool UserID_Method::SaveTemplate() {
+void UserID_Method::BeginSaveTemplate() {
     if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
         originalId = DataStorage::GetInstance().GetCurrentUserXnId();
-        return true;
+        state = Ready;
     }
     else {
-        return false;
+        state = NotReady;
     }
 
 }
 
-void UserID_Method::Update() {
+void UserID_Method::ContinueSaveTemplate() {
+}
 
+void UserID_Method::Update() {
 }
 
 double UserID_Method::RateUser(XnUserID userId) {

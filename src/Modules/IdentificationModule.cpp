@@ -36,18 +36,19 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
         }
         identificationThreshold = DEFAULT_IDENTIFICATION_THRESHOLD;
     }
-    if(!nodeHandlePrivate->getParam("userID_MethodTrust", userID_method.trustValue)) {
+    methods[IM_UserId] = new UserID_Method();
+    if(!nodeHandlePrivate->getParam("userID_MethodTrust", methods[IM_UserId]->trustValue)) {
         if(logLevel <= Warn) {
             ROS_WARN("IdentificationModule: Trust value for userID method not found, using default: %f", DEFAULT_USER_ID_METHOD_TRUST);
         }
-        userID_method.trustValue = DEFAULT_USER_ID_METHOD_TRUST;
+        methods[IM_UserId]->trustValue = DEFAULT_USER_ID_METHOD_TRUST;
     }
-    height_method = new Height_Method();
-    if(!nodeHandlePrivate->getParam("height_MethodTrust", height_method->trustValue)) {
+    methods[IM_Height] = new Height_Method();
+    if(!nodeHandlePrivate->getParam("height_MethodTrust", methods[IM_Height]->trustValue)) {
         if(logLevel <= Warn) {
             ROS_WARN("IdentificationModule: Trust value for height method not found, using default: %f", DEFAULT_USER_ID_METHOD_TRUST);
         }
-        height_method->trustValue = DEFAULT_HEIGHT_METHOD_TRUST;
+        methods[IM_Height]->trustValue = DEFAULT_HEIGHT_METHOD_TRUST;
     }
     if(logLevel <= Info) {
         ROS_INFO("IdentificationModule: initialized");
@@ -63,81 +64,119 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
 
 void IdentificationModule::Update()
 {
-    if(state == PresentTemplate) {
-        userID_method.Update();
-        //height_method.Update();
-        XnUInt16 numberOfUsers = SensorsModule::GetInstance().GetUserGenerator().GetNumberOfUsers();
-        XnUserID userIds[numberOfUsers];
-        SensorsModule::GetInstance().GetUserGenerator().GetUsers(userIds, numberOfUsers);
-        float usersRanking[numberOfUsers];
-        if (numberOfUsers > 0) {
-            for (int i = 0; i < numberOfUsers; ++i) {
-                usersRanking[i] = 0.0f;
-                if (DataStorage::GetInstance().IsPresentOnScene(userIds[i])) {
-                    usersRanking[i] += userID_method.trustValue * userID_method.RateUser(userIds[i]);
-                    //usersRanking[i] += height_method.trustValue * height_method.RateUser(userIds[i]);
-                }
-            }
-            int favouriteIndex = 0;
-            for (int i = 1; i < numberOfUsers; ++i) {
-                if (usersRanking[favouriteIndex] < usersRanking[i]) {
-                    favouriteIndex = i;
-                }
-            }
-            if (usersRanking[favouriteIndex] >= identificationThreshold) {
-                DataStorage::GetInstance().SetCurrentUserXnId(userIds[favouriteIndex]);
-            }
-            else {
-                DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
-            }
-        }
-        else {
-            DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
-        }
-        userID_method.LateUpdate();
-        //height_method.LateUpdate();
+    switch (state) {
+        case IdentificationStates::NoTemplate:
+            break;
+        case IdentificationStates::SavingTemplate:
+            ContinueSavingTemplate();
+            break;
+        case IdentificationStates::PresentTemplate:
+            IdentifyUser();
+            break;
     }
 
     //DEBUG
-    PrintStatus();
+    //PrintStatus();
 }
 
 void IdentificationModule::Finish() {
-    delete height_method;
+    for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
+        delete methods[i];
+    }
 }
 
 void IdentificationModule::ClearTemplate() {
-    userID_method.ClearTemplate();
-    //height_method.ClearTemplate();
-    state = NoTemplate;
+    for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
+        methods[i]->ClearTemplate();
+    }
+    state = IdentificationStates::NoTemplate;
     if(logLevel <= Info) {
         ROS_INFO("IdentificationModule: template cleared");
     }
 }
 
-bool IdentificationModule::SaveTemplateOfCurrentUser() {
-    bool savingResult = true;
-    savingResult = savingResult && userID_method.SaveTemplate();
-    //savingResult = savingResult && height_method.SaveTemplate();
-    if(savingResult) {
-        state = PresentTemplate;
-        if(logLevel <= Info) {
-            ROS_INFO("IdentificationModule: template saved");
-        }
-        return true;
+void IdentificationModule::SaveTemplateOfCurrentUser() {
+    state = IdentificationStates::SavingTemplate;
+    for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
+        methods[i]->BeginSaveTemplate();
     }
-    else {
-        if(logLevel <= Warn) {
-            ROS_WARN("IdentificationModule: failed to save template");
-        }
-        return false;
+    if(logLevel <= Info) {
+        ROS_INFO("IdentificationModule: begin saving template");
     }
+}
+
+IdentificationStates IdentificationModule::GetState() {
+    return state;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+void IdentificationModule::ContinueSavingTemplate() {
+    MethodState templateState = Ready;
+    for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
+        methods[i]->ContinueSaveTemplate();
+        if(methods[i]->GetState() == CreatingTemplate) {
+            templateState = CreatingTemplate;
+        }
+        else if (methods[i]->GetState() == NotReady) {
+            templateState = NotReady;
+            break;
+        }
+    }
+    if(templateState == Ready) {
+        state = IdentificationStates::PresentTemplate;
+        if(logLevel <= Info) {
+            ROS_INFO("IdentificationModule: saving template successful");
+        }
+    }
+    else if (templateState == NotReady) {
+        if(logLevel <= Info) {
+            ROS_INFO("IdentificationModule: saving template failed");
+        }
+        ClearTemplate();
+    }
+}
+
+void IdentificationModule::IdentifyUser() {
+    for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
+        methods[i]->Update();
+    }
+    XnUInt16 numberOfUsers = SensorsModule::GetInstance().GetUserGenerator().GetNumberOfUsers();
+    XnUserID userIds[numberOfUsers];
+    SensorsModule::GetInstance().GetUserGenerator().GetUsers(userIds, numberOfUsers);
+    float usersRanking[numberOfUsers];
+    if (numberOfUsers > 0) {
+        for (int i = 0; i < numberOfUsers; ++i) {
+            usersRanking[i] = 0.0f;
+            if (DataStorage::GetInstance().IsPresentOnScene(userIds[i])) {
+                for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
+                    usersRanking[i] += methods[i]->trustValue * methods[i]->RateUser(userIds[i]);
+                }
+            }
+        }
+        int favouriteIndex = 0;
+        for (int i = 1; i < numberOfUsers; ++i) {
+            if (usersRanking[favouriteIndex] < usersRanking[i]) {
+                favouriteIndex = i;
+            }
+        }
+        if (usersRanking[favouriteIndex] >= identificationThreshold) {
+            DataStorage::GetInstance().SetCurrentUserXnId(userIds[favouriteIndex]);
+        }
+        else {
+            DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
+        }
+    }
+    else {
+        DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
+    }
+    for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
+        methods[i]->LateUpdate();
+    }
+}
+
 void IdentificationModule::PrintStatus() {
     if(printStatusCooldown <= 0) {
         printStatusCooldown = printStatusTime;
@@ -145,7 +184,7 @@ void IdentificationModule::PrintStatus() {
             XnPoint3D position;
             SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), position);
             double height = 0.0;
-            Height_Method* heightMethodPointer = (Height_Method*) height_method;
+            Height_Method* heightMethodPointer = (Height_Method*) methods[IM_Height];
             std::cout << "User position- X: " << position.X << "; Y: " << position.Y << "; Z: " << position.Z << "; Height: " << height << "\n";
             std::cout << "Current height: " << heightMethodPointer->CalculateHeight(DataStorage::GetInstance().GetCurrentUserXnId()) << "\n";
         }

@@ -1,7 +1,8 @@
 #ifndef ELEKTRON_ESCORT_HEIGHT_METHOD_H
 #define ELEKTRON_ESCORT_HEIGHT_METHOD_H
 
-#define DEFAULT_HEIGHT_TOLERANCE 30.0
+#define DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES 60
+#define DEFAULT_HEIGHT_TOLERANCE 1000.0
 
 #include <algorithm>
 #include "Identification_Method.h"
@@ -11,16 +12,17 @@
 class Height_Method : public Identification_Method {
 public:
     void ClearTemplate();
-    bool SaveTemplate();
+    void BeginSaveTemplate();
+    void ContinueSaveTemplate();
     void Update();
     double RateUser(XnUserID userId);
     void LateUpdate();
     double CalculateHeight(XnUserID const& userId);
-    double CalculateHeight(XnUserID const& userId, double& confidence);
 
 private:
-    double originalHeight;
-    double CalculateJointDistance(XnUserID const& userId, XnSkeletonJoint const& jointA, XnSkeletonJoint const& jointB, double& confidence);
+    int numberOfCollectedsamples = 0;
+    double originalHeight = 0.0;
+    double CalculateJointDistance(XnUserID const& userId, XnSkeletonJoint const& jointA, XnSkeletonJoint const& jointB);
 };
 
 #endif //ELEKTRON_ESCORT_HEIGHT_METHOD_H

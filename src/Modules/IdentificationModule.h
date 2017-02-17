@@ -2,9 +2,9 @@
 #define ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H
 
 #define DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL Debug
-#define DEFAULT_IDENTIFICATION_THRESHOLD 0.5
-#define DEFAULT_USER_ID_METHOD_TRUST 0.5
-#define DEFAULT_HEIGHT_METHOD_TRUST 0.0
+#define DEFAULT_IDENTIFICATION_THRESHOLD 0.4
+#define DEFAULT_USER_ID_METHOD_TRUST 0.0
+#define DEFAULT_HEIGHT_METHOD_TRUST 1.0
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -16,7 +16,11 @@
 
 
 enum IdentificationStates {
-    NoTemplate, PresentTemplate
+    NoTemplate, PresentTemplate, SavingTemplate
+};
+
+enum ImplementedMethods {
+    IM_UserId, IM_Height, IM_NUMBER_OF_METHODS
 };
 
 class IdentificationModule {
@@ -29,19 +33,21 @@ public:
     void Update();
     void Finish();
     void ClearTemplate();
-    bool SaveTemplateOfCurrentUser();
+    void SaveTemplateOfCurrentUser();
+    IdentificationStates GetState();
 
 private:
     LogLevels logLevel;
     double identificationThreshold;
     IdentificationStates state;
-    UserID_Method userID_method;
-    Identification_Method* height_method;
+    Identification_Method* methods[ImplementedMethods::IM_NUMBER_OF_METHODS];
 
     IdentificationModule() {}
     IdentificationModule(const IdentificationModule &);
     IdentificationModule &operator=(const IdentificationModule &);
     ~IdentificationModule() {}
+    void ContinueSavingTemplate();
+    void IdentifyUser();
 
     //DEBUG
     double printStatusCooldown;

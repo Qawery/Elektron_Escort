@@ -17,7 +17,7 @@
 
 enum TaskState
 {
-    Idle, Awaiting, Following, Waiting, Searching
+    Idle, Awaiting, Saving, Following, Waiting, Searching
 };
 
 class TaskModule {
@@ -34,7 +34,6 @@ private:
     TaskState state;
     double waitTimeLimit;
     double searchTimeLimit;
-    XnPoint3D lastUserPosition;
     double maxUserDistance;
     double timeElapsed;
 
@@ -42,14 +41,16 @@ private:
     TaskModule(const TaskModule &);
     TaskModule &operator=(const TaskModule &);
     ~TaskModule() {}
-    void BecomeIdle();
-    void AwaitRegistration();
-    void SaveTemplate();
-    void ResumeFollowing();
-    void WaitForReturn();
-    void Search();
+    void IdleStateEnter();
+    void AwaitingStateEnter();
+    void SavingStateEnter();
+    void FollowingStateEnter();
+    void WaitingStateEnter();
+    void SearchingStateEnter();
+
     void IdleStateUpdate();
     void AwaitingStateUpdate();
+    void SavingTemplateUpdate();
     void FollowingStateUpdate();
     void WaitingStateUpdate();
     void SearchingStateUpdate();
