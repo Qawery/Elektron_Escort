@@ -173,22 +173,6 @@ void SensorsModule::Work() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void SensorsModule::LoadCalibrationDataForUser(XnUserID userId) {
-    stateMutex.lock();
-    if(userGenerator.GetSkeletonCap().IsCalibrationData(CALIBRATION_SLOT)) {
-        userGenerator.GetSkeletonCap().LoadCalibrationData(userId, CALIBRATION_SLOT);
-        userGenerator.GetSkeletonCap().StartTracking(userId);
-        if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
-            ROS_DEBUG("SensorsModule: User: %d- loaded calibration data, tracking", userId);
-        }
-    }
-    else {
-        if(SensorsModule::GetInstance().GetLogLevel() <= Error) {
-            ROS_ERROR("SensorsModule: User: %d- missing calibration data", userId);
-        }
-    }
-    stateMutex.unlock();
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,10 +184,21 @@ void SensorsModule::User_NewUser(xn::UserGenerator& generator, XnUserID userId, 
         ROS_DEBUG("SensorsModule: User: %d- new", userId);
     }
     if (SensorsModule::GetInstance().GetState() != Off) {
-        generator.GetPoseDetectionCap().StartPoseDetection(CALIBRATION_POSE, userId);
         if(SensorsModule::GetInstance().GetState() == Working) {
-            SensorsModule::GetInstance().LoadCalibrationDataForUser(userId);
+            if(generator.GetSkeletonCap().IsCalibrationData(CALIBRATION_SLOT)) {
+                generator.GetSkeletonCap().LoadCalibrationData(userId, CALIBRATION_SLOT);
+                generator.GetSkeletonCap().StartTracking(userId);
+                if(SensorsModule::GetInstance().GetLogLevel() <= Debug) {
+                    ROS_DEBUG("SensorsModule: User: %d- loaded calibration data, tracking", userId);
+                }
+            }
+            else {
+                if(SensorsModule::GetInstance().GetLogLevel() <= Error) {
+                    ROS_ERROR("SensorsModule: User: %d- missing calibration data", userId);
+                }
+            }
         }
+        generator.GetPoseDetectionCap().StartPoseDetection(CALIBRATION_POSE, userId);
     }
     DataStorage::GetInstance().UserNew(userId);
     SensorsModule::GetInstance().UnlockStateMutex();

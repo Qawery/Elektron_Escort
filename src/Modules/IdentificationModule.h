@@ -3,8 +3,8 @@
 
 #define DEFAULT_IDENTIFICATION_MODULE_LOG_LEVEL Debug
 #define DEFAULT_IDENTIFICATION_THRESHOLD 1.0
-#define DEFAULT_USER_ID_METHOD_TRUST 1.0
-#define DEFAULT_HEIGHT_METHOD_TRUST 0.0
+#define DEFAULT_USER_ID_METHOD_TRUST 0.0
+#define DEFAULT_HEIGHT_METHOD_TRUST 1.0
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -48,6 +48,9 @@ private:
     ~IdentificationModule() {}
     void ContinueSavingTemplate();
     void IdentifyUser();
+
+    //DEBUG
+    int timer = 0;
 };
 
 #endif //ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H

@@ -34,7 +34,7 @@ void Height_Method::ContinueSaveTemplate() {
             }
         }
     }
-    else if(numberOfCollectedsamples == DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
+    else if(numberOfCollectedsamples >= DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
         originalHeight = originalHeight/numberOfCollectedsamples;
         state = Ready;
     }
@@ -49,7 +49,7 @@ double Height_Method::RateUser(XnUserID userId) {
     if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE && confidence >= 1.0) {
         return 1.0;
     }
-    else if(abs(userHeight - originalHeight) <= 2*DEFAULT_HEIGHT_TOLERANCE) {
+    else if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE) {
         return 0.5;
     }
     else {

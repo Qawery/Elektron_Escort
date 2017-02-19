@@ -120,6 +120,7 @@ void TaskModule::AwaitingStateEnter() {
             MobilityModule::GetInstance().SetState(Stop);
             IdentificationModule::GetInstance().ClearTemplate();
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
+            SensorsModule::GetInstance().TurnSensorOff();
             SensorsModule::GetInstance().BeginCalibration();
             break;
     }

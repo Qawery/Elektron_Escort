@@ -52,7 +52,6 @@ private:
     SensorsModule(const SensorsModule &);
     SensorsModule& operator=(const SensorsModule&);
     ~SensorsModule() {}
-    void LoadCalibrationDataForUser(XnUserID userId);
 
     //Callbacks
     static void User_NewUser(xn::UserGenerator& generator, XnUserID userId, void* cookie);

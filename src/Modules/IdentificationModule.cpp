@@ -69,6 +69,17 @@ void IdentificationModule::Update()
             IdentifyUser();
             break;
     }
+    //DEBUG
+    if(timer <= 0) {
+        timer = 60;
+        if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
+            ROS_INFO("No user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
+        }
+        else {
+            ROS_INFO("Current user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
+        }
+    }
+    --timer;
 }
 
 void IdentificationModule::Finish() {
@@ -107,15 +118,19 @@ IdentificationStates IdentificationModule::GetState() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void IdentificationModule::ContinueSavingTemplate() {
     MethodState templateState = Ready;
-    for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
-        methods[i]->ContinueSaveTemplate();
-        if(methods[i]->GetState() == CreatingTemplate) {
-            templateState = CreatingTemplate;
+    if(DataStorage::GetInstance().IsPresentOnScene(DataStorage::GetInstance().GetCurrentUserXnId())) {
+        for (int i = 0; i < IM_NUMBER_OF_METHODS; ++i) {
+            methods[i]->ContinueSaveTemplate();
+            if (methods[i]->GetState() == CreatingTemplate) {
+                templateState = CreatingTemplate;
+            } else if (methods[i]->GetState() == NotReady) {
+                templateState = NotReady;
+                break;
+            }
         }
-        else if (methods[i]->GetState() == NotReady) {
-            templateState = NotReady;
-            break;
-        }
+    }
+    else {
+        templateState = NotReady;
     }
     if(templateState == Ready) {
         state = IdentificationStates::PresentTemplate;
@@ -135,35 +150,37 @@ void IdentificationModule::IdentifyUser() {
     for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
         methods[i]->Update();
     }
-    /*
-    //TODO: identyfikacja
-    float usersRanking[numberOfUsers];
-    if (numberOfUsers > 0) {
-        for (int i = 0; i < numberOfUsers; ++i) {
-            usersRanking[i] = 0.0f;
-            if (DataStorage::GetInstance().IsPresentOnScene(userIds[i])) {
-                for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
-                    usersRanking[i] += methods[i]->trustValue * methods[i]->RateUser(userIds[i]);
-                }
+    std::set<XnUserID>* presentUsers = DataStorage::GetInstance().GetPresentUsersSet();
+    if(presentUsers->size()>0) {
+        std::set<XnUserID>::iterator iter;
+        int index = 0;
+        float usersRanking[presentUsers->size()];
+        XnUserID usersIds[presentUsers->size()];
+        for (iter = presentUsers->begin(); iter != presentUsers->end(); ++iter) {
+            usersIds[index] = *iter;
+            usersRanking[index] = 0.0;
+            ++index;
+        }
+        for (index = 0; index < presentUsers->size(); ++index) {
+            for (int i = 0; i < IM_NUMBER_OF_METHODS; ++i) {
+                usersRanking[index] += (methods[i]->RateUser(usersIds[index]) * methods[i]->trustValue);
             }
         }
-        int favouriteIndex = 0;
-        for (int i = 1; i < numberOfUsers; ++i) {
-            if (usersRanking[favouriteIndex] < usersRanking[i]) {
-                favouriteIndex = i;
+        int bestMatchingUserIndex = 0;
+        for (index = 1; index < presentUsers->size(); ++index) {
+            if (usersRanking[bestMatchingUserIndex] < usersRanking[index]) {
+                bestMatchingUserIndex = index;
             }
         }
-        if (usersRanking[favouriteIndex] >= identificationThreshold) {
-            DataStorage::GetInstance().SetCurrentUserXnId(userIds[favouriteIndex]);
-        }
-        else {
+        if (usersRanking[bestMatchingUserIndex] >= DEFAULT_IDENTIFICATION_THRESHOLD) {
+            DataStorage::GetInstance().SetCurrentUserXnId(usersIds[bestMatchingUserIndex]);
+        } else {
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
         }
     }
     else {
         DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
     }
-     */
     for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
         methods[i]->LateUpdate();
     }
