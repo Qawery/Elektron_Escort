@@ -1,6 +1,8 @@
 #ifndef ELEKTRON_ESCORT_IDENTIFICATIONMETHOD_H
 #define ELEKTRON_ESCORT_IDENTIFICATIONMETHOD_H
 
+#define DEFAULT_LOG_LEVEL Warn
+
 #include <XnCppWrapper.h>
 #include "../../Common.h"
 #include "../DataStorage.h"
@@ -20,9 +22,12 @@ public:
     virtual double RateUser(XnUserID userId)=0;
     virtual void LateUpdate()=0;
     MethodState GetState();
+    LogLevels GetLogLevel();
+    void SetLogLEvel(LogLevels newLogLevel);
 
 protected:
     MethodState state = NotReady;
+    LogLevels logLevel = DEFAULT_LOG_LEVEL;
 };
 
 #endif //ELEKTRON_ESCORT_IDENTIFICATIONMETHOD_H

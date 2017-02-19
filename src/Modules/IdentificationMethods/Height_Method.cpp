@@ -12,6 +12,7 @@ void Height_Method::BeginSaveTemplate() {
     numberOfCollectedsamples = 0;
     originalHeight = 0.0;
     state = CreatingTemplate;
+    retries = 0;
 }
 
 void Height_Method::ContinueSaveTemplate() {
@@ -19,17 +20,24 @@ void Height_Method::ContinueSaveTemplate() {
         return;
     }
     if(numberOfCollectedsamples < DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
-        //DEBUG
-        //originalHeight += CalculateHeight(DataStorage::GetInstance().GetCurrentUserXnId());
-        double temp = CalculateHeight(DataStorage::GetInstance().GetCurrentUserXnId());
-        originalHeight += temp;
-        ROS_INFO("Temp: %f", temp);
-        ++numberOfCollectedsamples;
+        double confidence;
+        double heightSample = CalculateHeight(DataStorage::GetInstance().GetCurrentUserXnId(), confidence);
+        if(confidence >= 1.0) {
+            originalHeight += heightSample;
+            ++numberOfCollectedsamples;
+            retries = 0;
+            //DEBUG
+            //ROS_INFO("Sample H/C: %f/%f", heightSample, confidence);
+        }
+        else {
+            ++retries;
+            if(retries >= DEFAULT_RETRIES_LIMIT) {
+                state = NotReady;
+            }
+        }
     }
     else if(numberOfCollectedsamples == DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
         originalHeight = originalHeight/numberOfCollectedsamples;
-        //DEBUG
-        ROS_INFO("Final: %f", originalHeight);
         state = Ready;
     }
 }
@@ -38,8 +46,11 @@ void Height_Method::Update() {
 }
 
 double Height_Method::RateUser(XnUserID userId) {
-    double userHeight = CalculateHeight(userId);
-    if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE) {
+    double confidence;
+    double userHeight = CalculateHeight(userId, confidence);
+    //DEBUG
+    //ROS_INFO("User I/H/C: %d/%f/%f", userId, userHeight, confidence);
+    if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE && confidence >= 1.0) {
         return 1.0;
     }
     else if(abs(userHeight - originalHeight) <= 2*DEFAULT_HEIGHT_TOLERANCE) {
@@ -55,18 +66,46 @@ void Height_Method::LateUpdate() {
 }
 
 double Height_Method::CalculateHeight(XnUserID const& userId) {
+    double confidence;
+    return CalculateHeight(userId, confidence);
+}
+
+double Height_Method::CalculateHeight(XnUserID const& userId, double &confidence) {
     double result = 0.0;
+    double confidenceTemp;
     double leftSide = 0.0;
-    leftSide += CalculateJointDistance(userId, XN_SKEL_TORSO, XN_SKEL_LEFT_HIP);
-    leftSide += CalculateJointDistance(userId, XN_SKEL_LEFT_HIP, XN_SKEL_LEFT_KNEE);
-    leftSide += CalculateJointDistance(userId, XN_SKEL_LEFT_KNEE,XN_SKEL_LEFT_FOOT);
+    double leftSideConfidence;
+    leftSide += CalculateJointDistance(userId, XN_SKEL_TORSO, XN_SKEL_LEFT_HIP, confidenceTemp);
+    leftSideConfidence = confidenceTemp;
+    leftSide += CalculateJointDistance(userId, XN_SKEL_LEFT_HIP, XN_SKEL_LEFT_KNEE, confidenceTemp);
+    leftSideConfidence += confidenceTemp;
+    leftSide += CalculateJointDistance(userId, XN_SKEL_LEFT_KNEE,XN_SKEL_LEFT_FOOT, confidenceTemp);
+    leftSideConfidence += confidenceTemp;
     double rightSide = 0.0;
-    rightSide += CalculateJointDistance(userId, XN_SKEL_TORSO, XN_SKEL_RIGHT_HIP);
-    rightSide += CalculateJointDistance(userId, XN_SKEL_RIGHT_HIP, XN_SKEL_RIGHT_KNEE);
-    rightSide += CalculateJointDistance(userId, XN_SKEL_RIGHT_KNEE,XN_SKEL_RIGHT_FOOT);
-    result += (leftSide+rightSide)/2;
-    result += CalculateJointDistance(userId, XN_SKEL_HEAD, XN_SKEL_NECK);
-    result += CalculateJointDistance(userId, XN_SKEL_NECK, XN_SKEL_TORSO);
+    double rightSideConfidence;
+    rightSide += CalculateJointDistance(userId, XN_SKEL_TORSO, XN_SKEL_RIGHT_HIP, confidenceTemp);
+    rightSideConfidence = confidenceTemp;
+    rightSide += CalculateJointDistance(userId, XN_SKEL_RIGHT_HIP, XN_SKEL_RIGHT_KNEE, confidenceTemp);
+    rightSideConfidence += confidenceTemp;
+    rightSide += CalculateJointDistance(userId, XN_SKEL_RIGHT_KNEE,XN_SKEL_RIGHT_FOOT, confidenceTemp);
+    rightSideConfidence += confidenceTemp;
+    if(rightSideConfidence > leftSideConfidence) {
+        result += rightSide;
+        confidence = leftSideConfidence;
+    }
+    else if(leftSideConfidence > rightSideConfidence) {
+        result += leftSide;
+        confidence = rightSideConfidence;
+    }
+    else {
+        result += (leftSide+rightSide)/2;
+        confidence = rightSideConfidence;
+    }
+    result += CalculateJointDistance(userId, XN_SKEL_HEAD, XN_SKEL_NECK, confidenceTemp);
+    confidence += confidenceTemp;
+    result += CalculateJointDistance(userId, XN_SKEL_NECK, XN_SKEL_TORSO, confidenceTemp);
+    confidence += confidenceTemp;
+    confidence = confidence/5;
     return result;
 }
 
@@ -74,7 +113,7 @@ double Height_Method::CalculateHeight(XnUserID const& userId) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-double Height_Method::CalculateJointDistance(XnUserID const& userId, XnSkeletonJoint const& jointA, XnSkeletonJoint const& jointB)
+double Height_Method::CalculateJointDistance(XnUserID const& userId, XnSkeletonJoint const& jointA, XnSkeletonJoint const& jointB, double &confidence)
 {
     XnSkeletonJointPosition joint_A_Postition;
     XnSkeletonJointPosition joint_B_Postition;
@@ -86,5 +125,6 @@ double Height_Method::CalculateJointDistance(XnUserID const& userId, XnSkeletonJ
     xDistance = abs(joint_A_Postition.position.X - joint_B_Postition.position.X);
     yDistance = abs(joint_A_Postition.position.Y - joint_B_Postition.position.Y);
     zDistance = abs(joint_A_Postition.position.Z - joint_B_Postition.position.Z);
+    confidence = std::min(joint_A_Postition.fConfidence, joint_B_Postition.fConfidence);
     return sqrt((xDistance*xDistance)+(yDistance*yDistance)+(zDistance*zDistance));
 }

@@ -30,6 +30,7 @@ public:
     bool IsPoseCooldownPassed(int userId);
     bool IsPresentOnScene(XnUserID userId);
     XnPoint3D GetLastUserPosition();
+    std::set<XnUserID>* GetPresentUsersSet();
 
 private:
     LogLevels logLevel;
@@ -45,7 +46,6 @@ private:
     DataStorage(const DataStorage &);
     DataStorage& operator=(const DataStorage&);
     ~DataStorage() {}
-    void UpdateUserData(double timeElapsed);
 };
 
 #endif //ELEKTRON_ESCORT_DATASTORAGE_H

@@ -73,7 +73,36 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate) {
 }
 
 void DataStorage::Update(double timeElapsed) {
-    UpdateUserData(timeElapsed);
+    for(int i=0; i<maxUsers; ++i) {
+        if(poseCooldown[i] > 0.0f) {
+            poseCooldown[i] -= timeElapsed;
+            if(poseCooldown[i] < 0.0f) {
+                poseCooldown[i] = 0.0f;
+            }
+        }
+        if(logLevel <= Debug) {
+            ROS_DEBUG("DataStorage: Pose cooldown for %d: %f", i, poseCooldown[i]);
+        }
+        userPose[i] = false;
+    }
+    if(currentUserXnId != NO_USER) {
+        SensorsModule::GetInstance().GetUserGenerator().GetCoM(currentUserXnId, lastUserPosition);
+    }
+    std::set<XnUserID> toRemove;
+    std::set<XnUserID>::iterator iter;
+    for(iter=presentUsers.begin(); iter!=presentUsers.end(); ++iter) {
+        XnPoint3D userCoM;
+        SensorsModule::GetInstance().GetUserGenerator().GetCoM(*iter, userCoM);
+        if(userCoM.Z <= 1.0) {
+            toRemove.insert(*iter);
+            if(logLevel <= Warn) {
+                ROS_WARN("Deleted invalid user: %d", *iter);
+            }
+        }
+    }
+    for(iter=toRemove.begin(); iter!=toRemove.end(); ++iter) {
+        presentUsers.erase(*iter);
+    }
 }
 
 XnUserID DataStorage::GetCurrentUserXnId() {
@@ -161,24 +190,11 @@ XnPoint3D DataStorage::GetLastUserPosition() {
     return lastUserPosition;
 }
 
+std::set<XnUserID>* DataStorage::GetPresentUsersSet() {
+    return &presentUsers;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void DataStorage::UpdateUserData(double timeElapsed) {
-    for(int i=0; i<maxUsers; ++i) {
-        if(poseCooldown[i] > 0.0f) {
-            poseCooldown[i] -= timeElapsed;
-            if(poseCooldown[i] < 0.0f) {
-                poseCooldown[i] = 0.0f;
-            }
-        }
-        if(logLevel <= Debug) {
-            ROS_DEBUG("DataStorage: Pose cooldown for %d: %f", i, poseCooldown[i]);
-        }
-        userPose[i] = false;
-    }
-    if(currentUserXnId != NO_USER) {
-        SensorsModule::GetInstance().GetUserGenerator().GetCoM(currentUserXnId, lastUserPosition);
-    }
-}

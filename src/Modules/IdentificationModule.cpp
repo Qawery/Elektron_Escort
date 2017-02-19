@@ -74,7 +74,6 @@ void IdentificationModule::Update()
             IdentifyUser();
             break;
     }
-
     //DEBUG
     //PrintStatus();
 }
@@ -143,9 +142,7 @@ void IdentificationModule::IdentifyUser() {
     for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
         methods[i]->Update();
     }
-    XnUInt16 numberOfUsers = SensorsModule::GetInstance().GetUserGenerator().GetNumberOfUsers();
-    XnUserID userIds[numberOfUsers];
-    SensorsModule::GetInstance().GetUserGenerator().GetUsers(userIds, numberOfUsers);
+    /*
     float usersRanking[numberOfUsers];
     if (numberOfUsers > 0) {
         for (int i = 0; i < numberOfUsers; ++i) {
@@ -172,6 +169,7 @@ void IdentificationModule::IdentifyUser() {
     else {
         DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
     }
+     */
     for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
         methods[i]->LateUpdate();
     }
