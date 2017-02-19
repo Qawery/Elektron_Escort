@@ -140,7 +140,7 @@ void Finish() {
 }
 
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "escort_main");
+	ros::init(argc, argv, "elektron_escort");
 	if(Initialization()) {
 		ros::Rate mainLoopRate(mainLoopRate);
 		while (ros::ok()) {

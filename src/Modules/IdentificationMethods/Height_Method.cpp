@@ -26,8 +26,6 @@ void Height_Method::ContinueSaveTemplate() {
             originalHeight += heightSample;
             ++numberOfCollectedsamples;
             retries = 0;
-            //DEBUG
-            //ROS_INFO("Sample H/C: %f/%f", heightSample, confidence);
         }
         else {
             ++retries;
@@ -48,8 +46,6 @@ void Height_Method::Update() {
 double Height_Method::RateUser(XnUserID userId) {
     double confidence;
     double userHeight = CalculateHeight(userId, confidence);
-    //DEBUG
-    //ROS_INFO("User I/H/C: %d/%f/%f", userId, userHeight, confidence);
     if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE && confidence >= 1.0) {
         return 1.0;
     }
@@ -59,7 +55,6 @@ double Height_Method::RateUser(XnUserID userId) {
     else {
         return 0.0;
     }
-
 }
 
 void Height_Method::LateUpdate() {

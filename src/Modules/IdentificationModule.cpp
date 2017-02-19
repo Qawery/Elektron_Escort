@@ -54,11 +54,6 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
         ROS_INFO("IdentificationModule: initialized");
     }
     state = NoTemplate;
-
-    //DEBUG
-    printStatusCooldown = 0.0;
-    printStatusTime = 30.0;
-
     return true;
 }
 
@@ -74,8 +69,6 @@ void IdentificationModule::Update()
             IdentifyUser();
             break;
     }
-    //DEBUG
-    //PrintStatus();
 }
 
 void IdentificationModule::Finish() {
@@ -143,6 +136,7 @@ void IdentificationModule::IdentifyUser() {
         methods[i]->Update();
     }
     /*
+    //TODO: identyfikacja
     float usersRanking[numberOfUsers];
     if (numberOfUsers > 0) {
         for (int i = 0; i < numberOfUsers; ++i) {
@@ -172,25 +166,5 @@ void IdentificationModule::IdentifyUser() {
      */
     for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
         methods[i]->LateUpdate();
-    }
-}
-
-void IdentificationModule::PrintStatus() {
-    if(printStatusCooldown <= 0) {
-        printStatusCooldown = printStatusTime;
-        if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
-            XnPoint3D position;
-            SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), position);
-            double height = 0.0;
-            Height_Method* heightMethodPointer = (Height_Method*) methods[IM_Height];
-            std::cout << "User position- X: " << position.X << "; Y: " << position.Y << "; Z: " << position.Z << "; Height: " << height << "\n";
-            std::cout << "Current height: " << heightMethodPointer->CalculateHeight(DataStorage::GetInstance().GetCurrentUserXnId()) << "\n";
-        }
-        else {
-            std::cout << "No user" << "\n";
-        }
-    }
-    else {
-        --printStatusCooldown;
     }
 }

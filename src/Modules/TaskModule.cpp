@@ -93,7 +93,7 @@ void TaskModule::IdleStateEnter() {
     state = Idle;
     MobilityModule::GetInstance().SetState(Stop);
     IdentificationModule::GetInstance().ClearTemplate();
-    SensorsModule::GetInstance().ChangeStateTo(Off);
+    SensorsModule::GetInstance().TurnSensorOff();
     DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
     if(logLevel <= Info) {
         ROS_INFO("TaskModule: Becoming idle");
@@ -103,23 +103,24 @@ void TaskModule::IdleStateEnter() {
 void TaskModule::AwaitingStateEnter() {
     switch (state) {
         case TaskState::Idle:
-            SensorsModule::GetInstance().ChangeStateTo(Calibrating);
+            SensorsModule::GetInstance().BeginCalibration();
             break;
         case TaskState::Saving:
-            SensorsModule::GetInstance().ClearCalibration();
+            SensorsModule::GetInstance().ResetCalibration();
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
             break;
         case TaskState::Following:
             MobilityModule::GetInstance().SetState(Stop);
             IdentificationModule::GetInstance().ClearTemplate();
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
-            SensorsModule::GetInstance().ChangeStateTo(Calibrating);
+            SensorsModule::GetInstance().TurnSensorOff();
+            SensorsModule::GetInstance().BeginCalibration();
             break;
         case TaskState::Searching:
             MobilityModule::GetInstance().SetState(Stop);
             IdentificationModule::GetInstance().ClearTemplate();
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
-            SensorsModule::GetInstance().ChangeStateTo(Calibrating);
+            SensorsModule::GetInstance().BeginCalibration();
             break;
     }
     state = Awaiting;
@@ -140,7 +141,7 @@ void TaskModule::FollowingStateEnter() {
     switch (state) {
         case Saving:
             MobilityModule::GetInstance().SetState(FollowUser);
-            SensorsModule::GetInstance().ChangeStateTo(Working);
+            SensorsModule::GetInstance().Work();
             break;
         case Waiting:
             MobilityModule::GetInstance().SetState(FollowUser);

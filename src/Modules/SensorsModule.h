@@ -33,8 +33,10 @@ public:
     void LockStateMutex();
     void UnlockStateMutex();
     SensorsState GetState();
-    void ChangeStateTo(SensorsState newState);
-    void ClearCalibration();
+    void TurnSensorOff();
+    void BeginCalibration();
+    void ResetCalibration();
+    void Work();
 
 private:
     LogLevels logLevel;
@@ -50,8 +52,6 @@ private:
     SensorsModule(const SensorsModule &);
     SensorsModule& operator=(const SensorsModule&);
     ~SensorsModule() {}
-    void ExitState(SensorsState state);
-    void EnterState(SensorsState state);
     void LoadCalibrationDataForUser(XnUserID userId);
 
     //Callbacks

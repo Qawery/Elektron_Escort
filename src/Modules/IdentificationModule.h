@@ -48,11 +48,6 @@ private:
     ~IdentificationModule() {}
     void ContinueSavingTemplate();
     void IdentifyUser();
-
-    //DEBUG
-    double printStatusCooldown;
-    double printStatusTime;
-    void PrintStatus();
 };
 
 #endif //ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H
