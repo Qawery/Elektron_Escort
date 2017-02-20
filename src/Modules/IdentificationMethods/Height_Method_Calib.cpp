@@ -1,38 +1,29 @@
-#include "Height_Method.h"
+#include "Height_Method_Calib.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Public
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Height_Method::ClearTemplate() {
+void Height_Method_Calib::ClearTemplate() {
     originalHeight = 0.0;
 }
 
-void Height_Method::BeginSaveTemplate() {
+void Height_Method_Calib::BeginSaveTemplate() {
     numberOfCollectedsamples = 0;
     originalHeight = 0.0;
     state = CreatingTemplate;
     retries = 0;
 }
 
-void Height_Method::ContinueSaveTemplate() {
+void Height_Method_Calib::ContinueSaveTemplate() {
     if(state != CreatingTemplate) {
         return;
     }
     if(numberOfCollectedsamples < DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
         double confidence;
         double heightSample = CalculateHeight(DataStorage::GetInstance().GetCurrentUserXnId(), confidence);
-        if(confidence >= 1.0) {
-            originalHeight += heightSample;
-            ++numberOfCollectedsamples;
-            retries = 0;
-        }
-        else {
-            ++retries;
-            if(retries >= DEFAULT_RETRIES_LIMIT) {
-                state = NotReady;
-            }
-        }
+        originalHeight += heightSample;
+        ++numberOfCollectedsamples;
     }
     else if(numberOfCollectedsamples >= DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
         originalHeight = originalHeight/numberOfCollectedsamples;
@@ -40,10 +31,10 @@ void Height_Method::ContinueSaveTemplate() {
     }
 }
 
-void Height_Method::Update() {
+void Height_Method_Calib::Update() {
 }
 
-double Height_Method::RateUser(XnUserID userId) {
+double Height_Method_Calib::RateUser(XnUserID userId) {
     double confidence;
     double userHeight = CalculateHeight(userId, confidence);
     if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE && confidence >= 1.0) {
@@ -57,14 +48,15 @@ double Height_Method::RateUser(XnUserID userId) {
     }
 }
 
-void Height_Method::LateUpdate() {
+void Height_Method_Calib::LateUpdate() {
 }
 
+double Height_Method_Calib::CalculateHeight(XnUserID const& userId) {
+    double confidence;
+    return CalculateHeight(userId, confidence);
+}
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Private
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-double Height_Method::CalculateHeight(XnUserID const& userId, double &confidence) {
+double Height_Method_Calib::CalculateHeight(XnUserID const& userId, double &confidence) {
     double result = 0.0;
     double confidenceTemp;
     double leftSide = 0.0;
@@ -103,7 +95,11 @@ double Height_Method::CalculateHeight(XnUserID const& userId, double &confidence
     return result;
 }
 
-double Height_Method::CalculateJointDistance(XnUserID const& userId, XnSkeletonJoint const& jointA, XnSkeletonJoint const& jointB, double &confidence)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Private
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+double Height_Method_Calib::CalculateJointDistance(XnUserID const& userId, XnSkeletonJoint const& jointA, XnSkeletonJoint const& jointB, double &confidence)
 {
     XnSkeletonJointPosition joint_A_Postition;
     XnSkeletonJointPosition joint_B_Postition;

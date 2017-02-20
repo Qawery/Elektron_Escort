@@ -14,7 +14,6 @@ enum MethodState {
 
 class Identification_Method {
 public:
-    double trustValue = 0.0;
     virtual void ClearTemplate()=0;
     virtual void BeginSaveTemplate()=0;
     virtual void ContinueSaveTemplate()=0;
@@ -22,10 +21,13 @@ public:
     virtual double RateUser(XnUserID userId)=0;
     virtual void LateUpdate()=0;
     MethodState GetState();
+    double GetTrustValue();
+    void SetTrustValue(double newTrustValue);
     LogLevels GetLogLevel();
-    void SetLogLEvel(LogLevels newLogLevel);
+    void SetLogLevel(LogLevels newLogLevel);
 
 protected:
+    double trustValue = 0.0;
     MethodState state = NotReady;
     LogLevels logLevel = DEFAULT_LOG_LEVEL;
 };

@@ -41,7 +41,7 @@ add_executable(escort_main src/escort_main.cpp
         src/Modules/IdentificationModule.cpp
 		src/Modules/IdentificationMethods/UserID_Method.cpp
         src/Modules/IdentificationMethods/Height_Method.cpp
-        src/Modules/IdentificationMethods/Identification_Method.cpp)
+        src/Modules/IdentificationMethods/Identification_Method.cpp src/Modules/IdentificationMethods/Height_Method_Calib.cpp src/Modules/IdentificationMethods/Height_Method_Calib.h)
 
 target_link_libraries(escort_main ${catkin_LIBRARIES}
 				     ${OpenNI_LIBRARIES}

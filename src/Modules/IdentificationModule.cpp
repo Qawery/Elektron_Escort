@@ -36,23 +36,34 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
         }
         identificationThreshold = DEFAULT_IDENTIFICATION_THRESHOLD;
     }
+    double methodTrustValue;
     methods[IM_UserId] = new UserID_Method();
-    if(!nodeHandlePrivate->getParam("userID_MethodTrust", methods[IM_UserId]->trustValue)) {
+    if(!nodeHandlePrivate->getParam("userID_MethodTrust", methodTrustValue)) {
         if(logLevel <= Warn) {
             ROS_WARN("IdentificationModule: Trust value for userID method not found, using default: %f", DEFAULT_USER_ID_METHOD_TRUST);
         }
-        methods[IM_UserId]->trustValue = DEFAULT_USER_ID_METHOD_TRUST;
+        methods[IM_UserId]->SetTrustValue(DEFAULT_USER_ID_METHOD_TRUST);
+    }
+    else {
+        methods[IM_UserId]->SetTrustValue(methodTrustValue);
     }
     methods[IM_Height] = new Height_Method();
-    if(!nodeHandlePrivate->getParam("height_MethodTrust", methods[IM_Height]->trustValue)) {
+    if(!nodeHandlePrivate->getParam("height_MethodTrust", methodTrustValue)) {
         if(logLevel <= Warn) {
             ROS_WARN("IdentificationModule: Trust value for height method not found, using default: %f", DEFAULT_USER_ID_METHOD_TRUST);
         }
-        methods[IM_Height]->trustValue = DEFAULT_HEIGHT_METHOD_TRUST;
+        methods[IM_Height]->SetTrustValue(DEFAULT_HEIGHT_METHOD_TRUST);
+    }
+    else {
+        methods[IM_UserId]->SetTrustValue(methodTrustValue);
     }
     if(logLevel <= Info) {
         ROS_INFO("IdentificationModule: initialized");
     }
+    //DEBUG START
+    calib = new Height_Method_Calib();
+    methods[IM_Height_Calib] = calib;
+    //DEBUG END
     state = NoTemplate;
     return true;
 }
@@ -66,20 +77,28 @@ void IdentificationModule::Update()
             ContinueSavingTemplate();
             break;
         case IdentificationStates::PresentTemplate:
+            //DEBUG START
+            if(timer <= 0) {
+                timer = 10;
+                std::set<XnUserID>* users = DataStorage::GetInstance().GetPresentUsersSet();
+                double confidence;
+                double height;
+                XnPoint3D position;
+                if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
+                    for (std::set<XnUserID>::iterator iter = users->begin(); iter != users->end(); ++iter) {
+                        height = calib->CalculateHeight(*iter, confidence);
+                        SensorsModule::GetInstance().GetUserGenerator().GetCoM(*iter, position);
+                        ROS_INFO("User %d height and confidence: %f, %f, at distance: %f", *iter, height, confidence, position.Z);
+                    }
+                }
+            }
+            else {
+                --timer;
+            }
+            //DEBUG END
             IdentifyUser();
             break;
     }
-    //DEBUG
-    if(timer <= 0) {
-        timer = 60;
-        if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
-            ROS_INFO("No user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
-        }
-        else {
-            ROS_INFO("Current user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
-        }
-    }
-    --timer;
 }
 
 void IdentificationModule::Finish() {
@@ -163,7 +182,7 @@ void IdentificationModule::IdentifyUser() {
         }
         for (index = 0; index < presentUsers->size(); ++index) {
             for (int i = 0; i < IM_NUMBER_OF_METHODS; ++i) {
-                usersRanking[index] += (methods[i]->RateUser(usersIds[index]) * methods[i]->trustValue);
+                usersRanking[index] += (methods[i]->RateUser(usersIds[index]) * methods[i]->GetTrustValue());
             }
         }
         int bestMatchingUserIndex = 0;
