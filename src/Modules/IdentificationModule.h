@@ -13,7 +13,6 @@
 #include "IdentificationMethods/Identification_Method.h"
 #include "IdentificationMethods/UserID_Method.h"
 #include "IdentificationMethods/Height_Method.h"
-#include "IdentificationMethods/Height_Method_Calib.h"
 
 
 enum IdentificationStates {
@@ -21,7 +20,7 @@ enum IdentificationStates {
 };
 
 enum ImplementedMethods {
-    IM_UserId, IM_Height, IM_Height_Calib, IM_NUMBER_OF_METHODS
+    IM_UserId, IM_Height, IM_NUMBER_OF_METHODS
 };
 
 class IdentificationModule {
@@ -49,10 +48,6 @@ private:
     ~IdentificationModule() {}
     void ContinueSavingTemplate();
     void IdentifyUser();
-    //DEBUG START
-    int timer = 0;
-    Height_Method_Calib* calib;
-    //DEBUG END
 };
 
 #endif //ELEKTRON_ESCORT_IDENTIFICATION_MODULE_H

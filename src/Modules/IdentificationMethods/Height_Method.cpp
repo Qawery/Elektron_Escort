@@ -46,11 +46,8 @@ void Height_Method::Update() {
 double Height_Method::RateUser(XnUserID userId) {
     double confidence;
     double userHeight = CalculateHeight(userId, confidence);
-    if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE && confidence >= 1.0) {
-        return 1.0;
-    }
-    else if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE) {
-        return 0.5;
+    if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE) {
+        return ((DEFAULT_HEIGHT_TOLERANCE-abs(userHeight - originalHeight))/DEFAULT_HEIGHT_TOLERANCE)*confidence;
     }
     else {
         return 0.0;

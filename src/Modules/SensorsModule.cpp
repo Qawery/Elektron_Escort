@@ -77,7 +77,7 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
     userGenerator.GetSkeletonCap().RegisterToCalibrationStart(UserCalibration_CalibrationStart, NULL, calibrationCallbacksHandle);
     userGenerator.GetSkeletonCap().RegisterToCalibrationComplete(UserCalibration_CalibrationComplete, NULL, calibrationCallbacksHandle);
     userGenerator.GetPoseDetectionCap().RegisterToPoseDetected(UserPose_PoseDetected, NULL, poseCallbacksHandle);
-    userGenerator.GetSkeletonCap().SetSmoothing(0.0f);
+    userGenerator.GetSkeletonCap().SetSmoothing(SMOOTHING_FACTOR);
     stateMutex.unlock();
     if(logLevel <= Info) {
         ROS_INFO("SensorsModule: initialized");

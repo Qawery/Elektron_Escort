@@ -4,6 +4,7 @@
 #define DEFAULT_SENSORS_MODULE_LOG_LEVEL Error
 #define CALIBRATION_POSE "Psi"
 #define CALIBRATION_SLOT 0
+#define SMOOTHING_FACTOR 0.0f
 
 #include <mutex>
 #include <ros/ros.h>

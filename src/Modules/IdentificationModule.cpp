@@ -60,10 +60,6 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
     if(logLevel <= Info) {
         ROS_INFO("IdentificationModule: initialized");
     }
-    //DEBUG START
-    calib = new Height_Method_Calib();
-    methods[IM_Height_Calib] = calib;
-    //DEBUG END
     state = NoTemplate;
     return true;
 }
@@ -77,25 +73,6 @@ void IdentificationModule::Update()
             ContinueSavingTemplate();
             break;
         case IdentificationStates::PresentTemplate:
-            //DEBUG START
-            if(timer <= 0) {
-                timer = 10;
-                std::set<XnUserID>* users = DataStorage::GetInstance().GetPresentUsersSet();
-                double confidence;
-                double height;
-                XnPoint3D position;
-                if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
-                    for (std::set<XnUserID>::iterator iter = users->begin(); iter != users->end(); ++iter) {
-                        height = calib->CalculateHeight(*iter, confidence);
-                        SensorsModule::GetInstance().GetUserGenerator().GetCoM(*iter, position);
-                        ROS_INFO("User %d height and confidence: %f, %f, at distance: %f", *iter, height, confidence, position.Z);
-                    }
-                }
-            }
-            else {
-                --timer;
-            }
-            //DEBUG END
             IdentifyUser();
             break;
     }
