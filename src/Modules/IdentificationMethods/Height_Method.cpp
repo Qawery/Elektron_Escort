@@ -58,22 +58,27 @@ void Height_Method::Update() {
 }
 
 double Height_Method::RateUser(XnUserID userId) {
-    double userHeight = 0.0;
-    for(std::list<double>::iterator iter = userHeightSamples[userId-1].begin(); iter != userHeightSamples[userId-1].end(); ++iter) {
-        userHeight += *iter;
-    }
-    userHeight = userHeight/MAX_NUMBER_OF_SAMPLES;
-    double difference = abs(userHeight - originalHeight);
-    if (difference > DEFAULT_HEIGHT_LIMIT) {
-        return 0.0;
+    if(userHeightSamples[userId-1].size() >= MIN_NUMBER_OF_SAMPLES) {
+        double userHeight = 0.0;
+        for (std::list<double>::iterator iter = userHeightSamples[userId - 1].begin();
+             iter != userHeightSamples[userId - 1].end(); ++iter) {
+            userHeight += *iter;
+        }
+        userHeight = userHeight / userHeightSamples[userId - 1].size();
+        double difference = abs(userHeight - originalHeight);
+        if (difference > DEFAULT_HEIGHT_LIMIT) {
+            return 0.0;
+        } else {
+            if (difference >= DEFAULT_HEIGHT_TOLERANCE) {
+                double x = 1.0-((difference - DEFAULT_HEIGHT_TOLERANCE) / (DEFAULT_HEIGHT_LIMIT - DEFAULT_HEIGHT_TOLERANCE));
+                return x*x;
+            } else {
+                return 1.0;
+            }
+        }
     }
     else {
-        if(difference >= DEFAULT_HEIGHT_TOLERANCE) {
-            return 1-((difference-DEFAULT_HEIGHT_TOLERANCE)/(DEFAULT_HEIGHT_LIMIT-DEFAULT_HEIGHT_TOLERANCE));
-        }
-        else {
-            return 1.0;
-        }
+        return 0.0;
     }
 }
 
