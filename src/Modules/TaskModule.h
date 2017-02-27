@@ -4,7 +4,7 @@
 #define DEFAULT_TASK_MODULE_LOG_LEVEL Info
 #define DEFAULT_WAIT_TIME_LIMIT 5.0
 #define DEFAULT_SEARCH_TIME_LIMIT 10.0
-#define DEFAULT_MAX_USER_DISTANCE 3000.0
+#define DEFAULT_MAX_USER_DISTANCE 4000.0
 
 #include <ros/ros.h>
 #include <ros/package.h>

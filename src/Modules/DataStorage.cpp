@@ -43,7 +43,7 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate) {
         maxUsers = 1;
     }
     userPose.resize(maxUsers, false);
-    poseCooldown.resize(maxUsers, 0.0f);
+    poseCooldown.resize(maxUsers, 0.0);
     XnPoint3D zero;
     zero.X = 0.0f;
     zero.Y = 0.0f;
@@ -55,11 +55,11 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate) {
         }
         poseCooldownTime = DEFAULT_POSE_COOLDOWN_TIME;
     }
-    if(poseCooldownTime < 0.0f) {
+    if(poseCooldownTime < 0.0) {
         if(logLevel <= Warn) {
             ROS_WARN("DataStorage: Requested negative time of pose cooldown: %f", poseCooldownTime);
         }
-        poseCooldownTime = 0.0f;
+        poseCooldownTime = 0.0;
     }
     currentUserXnId = NO_USER;
     if(logLevel <= Info) {
@@ -70,10 +70,10 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate) {
 
 void DataStorage::Update(double timeElapsed) {
     for(int i=0; i<maxUsers; ++i) {
-        if(poseCooldown[i] > 0.0f) {
+        if(poseCooldown[i] > 0.0) {
             poseCooldown[i] -= timeElapsed;
-            if(poseCooldown[i] < 0.0f) {
-                poseCooldown[i] = 0.0f;
+            if(poseCooldown[i] < 0.0) {
+                poseCooldown[i] = 0.0;
             }
         }
         if(logLevel <= Debug) {
@@ -136,7 +136,7 @@ void DataStorage::UserPose(int userId) {
         return;
     }
     else {
-        if(poseCooldown[userId] > 0.0f) {
+        if(poseCooldown[userId] > 0.0) {
             if(logLevel <= Debug) {
                 ROS_DEBUG("DataStorage: Pose detected for user %d, but ignored due to cooldown", userId);
             }
@@ -171,7 +171,7 @@ bool DataStorage::IsPoseCooldownPassed(int userId) {
         return true;
     }
     else {
-        if(poseCooldown[userId] <= 0.0f) {
+        if(poseCooldown[userId] <= 0.0) {
             return true;
         }
         else {

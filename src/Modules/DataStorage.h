@@ -3,7 +3,7 @@
 
 #define DEFAULT_DATA_STORAGE_LOG_LEVEL Info
 #define DEFAULT_MAX_USERS 20
-#define DEFAULT_POSE_COOLDOWN_TIME 3.0f
+#define DEFAULT_POSE_COOLDOWN_TIME 3.0
 
 #include <mutex>
 #include <ros/ros.h>
@@ -36,10 +36,10 @@ public:
 private:
     LogLevels logLevel;
     int maxUsers;
-    float poseCooldownTime;
+    double poseCooldownTime;
     XnUserID currentUserXnId;
     std::vector<bool> userPose;
-    std::vector<float> poseCooldown;
+    std::vector<double> poseCooldown;
     std::set<XnUserID> presentUsers;
     XnPoint3D lastUserPosition;
 
