@@ -6,10 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Height_Method::ClearTemplate() {
     originalHeight = 0.0;
-    userHieghtSamples.clear();
-    //DEBUG START
-    timers.clear();
-    //DEBUG END
+    userHeightSamples.clear();
 }
 
 void Height_Method::BeginSaveTemplate() {
@@ -17,10 +14,7 @@ void Height_Method::BeginSaveTemplate() {
     originalHeight = 0.0;
     state = CreatingTemplate;
     retries = 0;
-    userHieghtSamples.resize(DataStorage::GetInstance().GetMaxUsers());
-    //DEBUG START
-    timers.resize(DataStorage::GetInstance().GetMaxUsers());
-    //DEBUG END
+    userHeightSamples.resize(DataStorage::GetInstance().GetMaxUsers());
 }
 
 void Height_Method::ContinueSaveTemplate() {
@@ -49,21 +43,15 @@ void Height_Method::ContinueSaveTemplate() {
 }
 
 void Height_Method::Update() {
-    for(XnUserID i=0; i < userHieghtSamples.size(); ++i) {
+    for(XnUserID i=0; i < userHeightSamples.size(); ++i) {
         if(DataStorage::GetInstance().IsPresentOnScene(i+1)) {
-            userHieghtSamples[i].push_front(CalculateHeight(i+1));
-            if(userHieghtSamples[i].size() > MAX_NUMBER_OF_SAMPLES) {
-                userHieghtSamples[i].pop_back();
+            userHeightSamples[i].push_front(CalculateHeight(i+1));
+            if(userHeightSamples[i].size() > MAX_NUMBER_OF_SAMPLES) {
+                userHeightSamples[i].pop_back();
             }
-            //DEBUG START
-            --timers[i];
-            //DEBUG END
         }
         else {
-            userHieghtSamples[i].clear();
-            //DEBUG START
-            timers[i]=0;
-            //DEBUG END
+            userHeightSamples[i].clear();
         }
     }
 
@@ -71,42 +59,20 @@ void Height_Method::Update() {
 
 double Height_Method::RateUser(XnUserID userId) {
     double userHeight = 0.0;
-    for(std::list<double>::iterator iter = userHieghtSamples[userId-1].begin(); iter != userHieghtSamples[userId-1].end(); ++iter) {
+    for(std::list<double>::iterator iter = userHeightSamples[userId-1].begin(); iter != userHeightSamples[userId-1].end(); ++iter) {
         userHeight += *iter;
     }
     userHeight = userHeight/MAX_NUMBER_OF_SAMPLES;
     double difference = abs(userHeight - originalHeight);
-    double rating;
     if (difference > DEFAULT_HEIGHT_LIMIT) {
-        //DEBUG START
-        rating = 0.0;
-        if(timers[userId-1] <= 0) {
-            ROS_ERROR("User: %d rating: %f", userId, rating);
-            timers[userId-1] = 30;
-        }
-        //DEBUG END
-        return rating;
+        return 0.0;
     }
     else {
         if(difference >= DEFAULT_HEIGHT_TOLERANCE) {
-            //DEBUG START
-            rating = 1-((difference-DEFAULT_HEIGHT_TOLERANCE)/(DEFAULT_HEIGHT_LIMIT-DEFAULT_HEIGHT_TOLERANCE));
-            if(timers[userId-1] <= 0) {
-                ROS_ERROR("User: %d rating: %f", userId, rating);
-                timers[userId-1] = 30;
-            }
-            //DEBUG END
-            return rating;
+            return 1-((difference-DEFAULT_HEIGHT_TOLERANCE)/(DEFAULT_HEIGHT_LIMIT-DEFAULT_HEIGHT_TOLERANCE));
         }
         else {
-            //DEBUG START
-            rating = 1.0;
-            if(timers[userId-1] <= 0) {
-                ROS_ERROR("User: %d rating: %f", userId, rating);
-                timers[userId-1] = 30;
-            }
-            //DEBUG END
-            return rating;
+            return 1.0;
         }
     }
 }

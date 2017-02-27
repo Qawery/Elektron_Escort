@@ -22,17 +22,13 @@ public:
     void LateUpdate();
 
 private:
-    std::vector<std::list<double>> userHieghtSamples;
+    std::vector<std::list<double>> userHeightSamples;
     int numberOfCollectedsamples = 0;
     int retries = 0;
     double originalHeight = 0.0;
     double CalculateHeight(XnUserID const& userId);
     double CalculateHeight(XnUserID const& userId, double &confidence);
     double CalculateJointDistance(XnUserID const& userId, XnSkeletonJoint const& jointA, XnSkeletonJoint const& jointB, double &confidence);
-
-    //DEBUG START
-    std::vector<double> timers;
-    //DEBUG END
 };
 
 #endif //ELEKTRON_ESCORT_HEIGHT_METHOD_H
