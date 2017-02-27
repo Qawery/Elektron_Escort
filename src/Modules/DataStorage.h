@@ -1,7 +1,7 @@
 #ifndef ELEKTRON_ESCORT_DATASTORAGE_H
 #define ELEKTRON_ESCORT_DATASTORAGE_H
 
-#define DEFAULT_DATA_STORAGE_LOG_LEVEL Warn
+#define DEFAULT_DATA_STORAGE_LOG_LEVEL Info
 #define DEFAULT_MAX_USERS 3
 #define DEFAULT_POSE_COOLDOWN_TIME 3.0f
 
@@ -31,6 +31,7 @@ public:
     bool IsPresentOnScene(XnUserID userId);
     XnPoint3D GetLastUserPosition();
     std::set<XnUserID>* GetPresentUsersSet();
+    int GetMaxUsers();
 
 private:
     LogLevels logLevel;

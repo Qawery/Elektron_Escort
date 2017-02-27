@@ -1,8 +1,6 @@
 #ifndef ELEKTRON_ESCORT_IDENTIFICATIONMETHOD_H
 #define ELEKTRON_ESCORT_IDENTIFICATIONMETHOD_H
 
-#define DEFAULT_LOG_LEVEL Warn
-
 #include <XnCppWrapper.h>
 #include "../../Common.h"
 #include "../DataStorage.h"
@@ -23,13 +21,10 @@ public:
     MethodState GetState();
     double GetTrustValue();
     void SetTrustValue(double newTrustValue);
-    LogLevels GetLogLevel();
-    void SetLogLevel(LogLevels newLogLevel);
 
 protected:
     double trustValue = 0.0;
     MethodState state = NotReady;
-    LogLevels logLevel = DEFAULT_LOG_LEVEL;
 };
 
 #endif //ELEKTRON_ESCORT_IDENTIFICATIONMETHOD_H

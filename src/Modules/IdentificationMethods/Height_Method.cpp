@@ -6,6 +6,10 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Height_Method::ClearTemplate() {
     originalHeight = 0.0;
+    userHieghtSamples.clear();
+    //DEBUG START
+    timers.clear();
+    //DEBUG END
 }
 
 void Height_Method::BeginSaveTemplate() {
@@ -13,10 +17,9 @@ void Height_Method::BeginSaveTemplate() {
     originalHeight = 0.0;
     state = CreatingTemplate;
     retries = 0;
+    userHieghtSamples.resize(DataStorage::GetInstance().GetMaxUsers());
     //DEBUG START
-    timer=0;
-    counter=0;
-    templateCreationDistance=0.0;
+    timers.resize(DataStorage::GetInstance().GetMaxUsers());
     //DEBUG END
 }
 
@@ -31,11 +34,6 @@ void Height_Method::ContinueSaveTemplate() {
             originalHeight += heightSample;
             ++numberOfCollectedsamples;
             retries = 0;
-            //DEBUG START
-            XnPoint3D position;
-            SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), position);
-            templateCreationDistance+=position.Z;
-            //DEBUG END
         }
         else {
             ++retries;
@@ -47,37 +45,69 @@ void Height_Method::ContinueSaveTemplate() {
     else if(numberOfCollectedsamples >= DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
         originalHeight = originalHeight/numberOfCollectedsamples;
         state = Ready;
-        //DEBUG START
-        templateCreationDistance=templateCreationDistance/numberOfCollectedsamples;
-        ROS_ERROR("Calculated template: %f; At distance: %f", originalHeight, templateCreationDistance);
-        //DEBUG END
     }
 }
 
 void Height_Method::Update() {
+    for(XnUserID i=0; i < userHieghtSamples.size(); ++i) {
+        if(DataStorage::GetInstance().IsPresentOnScene(i+1)) {
+            userHieghtSamples[i].push_front(CalculateHeight(i+1));
+            if(userHieghtSamples[i].size() > MAX_NUMBER_OF_SAMPLES) {
+                userHieghtSamples[i].pop_back();
+            }
+            //DEBUG START
+            --timers[i];
+            //DEBUG END
+        }
+        else {
+            userHieghtSamples[i].clear();
+            //DEBUG START
+            timers[i]=0;
+            //DEBUG END
+        }
+    }
+
 }
 
 double Height_Method::RateUser(XnUserID userId) {
-    double confidence;
-    double userHeight = CalculateHeight(userId, confidence);
-    double result = userHeight - originalHeight;
-    //DEBUG START
-    if(timer <= 0 && counter < 600) {
-        timer = 0;
-        XnPoint3D position;
-        SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), position);
-        ROS_ERROR("diff_walk_obr = [diff_walk_obr; %f, %f];", position.Z, result);
-        counter++;
+    double userHeight = 0.0;
+    for(std::list<double>::iterator iter = userHieghtSamples[userId-1].begin(); iter != userHieghtSamples[userId-1].end(); ++iter) {
+        userHeight += *iter;
     }
-    if(timer > 0) {
-        --timer;
-    }
-    //DEBUG END
-    if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE) {
-        return 1.0;
+    userHeight = userHeight/MAX_NUMBER_OF_SAMPLES;
+    double difference = abs(userHeight - originalHeight);
+    double rating;
+    if (difference > DEFAULT_HEIGHT_LIMIT) {
+        //DEBUG START
+        rating = 0.0;
+        if(timers[userId-1] <= 0) {
+            ROS_ERROR("User: %d rating: %f", userId, rating);
+            timers[userId-1] = 30;
+        }
+        //DEBUG END
+        return rating;
     }
     else {
-        return 0.0;
+        if(difference >= DEFAULT_HEIGHT_TOLERANCE) {
+            //DEBUG START
+            rating = 1-((difference-DEFAULT_HEIGHT_TOLERANCE)/(DEFAULT_HEIGHT_LIMIT-DEFAULT_HEIGHT_TOLERANCE));
+            if(timers[userId-1] <= 0) {
+                ROS_ERROR("User: %d rating: %f", userId, rating);
+                timers[userId-1] = 30;
+            }
+            //DEBUG END
+            return rating;
+        }
+        else {
+            //DEBUG START
+            rating = 1.0;
+            if(timers[userId-1] <= 0) {
+                ROS_ERROR("User: %d rating: %f", userId, rating);
+                timers[userId-1] = 30;
+            }
+            //DEBUG END
+            return rating;
+        }
     }
 }
 
@@ -88,6 +118,11 @@ void Height_Method::LateUpdate() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Private
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+double Height_Method::CalculateHeight(XnUserID const& userId) {
+    double confidence;
+    return CalculateHeight(userId, confidence);
+}
+
 double Height_Method::CalculateHeight(XnUserID const& userId, double &confidence) {
     double result = 0.0;
     double confidenceTemp;

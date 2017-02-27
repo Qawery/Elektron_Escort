@@ -42,17 +42,13 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate) {
         }
         maxUsers = 1;
     }
-    userPose.resize(maxUsers);
-    poseCooldown.resize(maxUsers);
+    userPose.resize(maxUsers, false);
+    poseCooldown.resize(maxUsers, 0.0f);
     XnPoint3D zero;
     zero.X = 0.0f;
     zero.Y = 0.0f;
     zero.Z = 0.0f;
     lastUserPosition = zero;
-    for(int i=0; i<maxUsers; ++i) {
-        userPose.push_back(false);
-        poseCooldown.push_back(0.0f);
-    }
     if(!nodeHandlePrivate->getParam("poseCooldownTime", poseCooldownTime)) {
         if(logLevel <= Warn) {
             ROS_WARN("DataStorage: Value of poseCooldownTime not found, using default: %f", DEFAULT_POSE_COOLDOWN_TIME);
@@ -201,7 +197,6 @@ std::set<XnUserID>* DataStorage::GetPresentUsersSet() {
     return &presentUsers;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Private
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+int DataStorage::GetMaxUsers() {
+    return maxUsers;
+}

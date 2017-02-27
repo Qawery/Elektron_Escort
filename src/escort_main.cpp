@@ -4,7 +4,6 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include "Common.h"
-//TODO: topic include
 #include "Modules/SensorsModule.h"
 #include "Modules/IdentificationModule.h"
 #include "Modules/TaskModule.h"
@@ -105,7 +104,6 @@ bool Initialization() {
         }
         return false;
     }
-    //TODO: inicjalizacja modułu topica
     if(TaskModule::GetInstance().Initialize(nodeHandlePrivate)) {
         if(logLevel <= Debug) {
             ROS_DEBUG("EscortMain: Task module initialized successfully");
@@ -124,7 +122,6 @@ bool Initialization() {
 }
 
 void Update() {
-    //TODO: topic module update
     SensorsModule::GetInstance().Update();
     IdentificationModule::GetInstance().Update();
     TaskModule::GetInstance().Update(mainLoopTime);

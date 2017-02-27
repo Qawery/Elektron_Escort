@@ -173,7 +173,7 @@ void IdentificationModule::IdentifyUser() {
             DataStorage::GetInstance().SetCurrentUserXnId(usersIds[bestMatchingUserIndex]);
             if(previousUser != usersIds[bestMatchingUserIndex]) {
                 if (logLevel <= Info) {
-                    ROS_INFO("IdentificationModule: Switched to user &d", usersIds[bestMatchingUserIndex]);
+                    ROS_INFO("IdentificationModule: Switched to user %d", usersIds[bestMatchingUserIndex]);
                 }
             }
         } else {

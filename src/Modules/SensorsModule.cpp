@@ -37,9 +37,9 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
         }
         return false;
     }
-    result = context.FindExistingNode(XN_NODE_TYPE_USER, userGenerator);	//Próba znalezienia genaratora użytkowników.
+    result = context.FindExistingNode(XN_NODE_TYPE_USER, userGenerator);
     if (result != XN_STATUS_OK) {
-        result = userGenerator.Create(context);	//Nie znaleziono istniejącego generatora użytkowników, próbujemy utworzyć własny.
+        result = userGenerator.Create(context);
     }
     if (result != XN_STATUS_OK) {
         if(logLevel <= Error) {
@@ -168,11 +168,6 @@ void SensorsModule::Work() {
     state = Working;
     stateMutex.unlock();
 }
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Private
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

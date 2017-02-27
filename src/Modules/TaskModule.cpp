@@ -50,19 +50,16 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
         maxUserDistance = DEFAULT_MAX_USER_DISTANCE;
     }
     timeElapsed = 0.0;
-    state = Idle;
+    SensorsModule::GetInstance().BeginCalibration();
+    state = Awaiting;
     if(logLevel <= Info) {
         ROS_INFO("TaskModule: Initialized");
     }
-    AwaitingStateEnter();
     return true;
 }
 
 void TaskModule::Update(double _timeElapsed) {
     switch (state) {
-        case Idle:
-            IdleStateUpdate();
-            break;
         case Awaiting:
             AwaitingStateUpdate();
             break;
@@ -89,22 +86,8 @@ void TaskModule::Update(double _timeElapsed) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //State change
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TaskModule::IdleStateEnter() {
-    state = Idle;
-    MobilityModule::GetInstance().SetState(Stop);
-    IdentificationModule::GetInstance().ClearTemplate();
-    SensorsModule::GetInstance().TurnSensorOff();
-    DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
-    if(logLevel <= Info) {
-        ROS_INFO("TaskModule: Becoming idle");
-    }
-}
-
 void TaskModule::AwaitingStateEnter() {
     switch (state) {
-        case TaskState::Idle:
-            SensorsModule::GetInstance().BeginCalibration();
-            break;
         case TaskState::Saving:
             SensorsModule::GetInstance().ResetCalibration();
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
@@ -178,29 +161,14 @@ void TaskModule::SearchingStateEnter() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //State update
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TaskModule::IdleStateUpdate() {
-    if(false) {
-        //TODO: przejście w stan rejestracji na podstawie danych z topica
-        AwaitingStateEnter();
-    }
-}
-
 void TaskModule::AwaitingStateUpdate() {
-    if(false){
-        //TODO: przejście w stan Idle na podstawie danych z topica
-        IdleStateEnter();
-    }
-    else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
+    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
         SavingStateEnter();
     }
 }
 
 void TaskModule::SavingTemplateUpdate() {
-    if(false) {
-        //TODO: przejście w stan Idle na podstawie danych z topica
-        IdleStateEnter();
-    }
-    else if(IdentificationModule::GetInstance().GetState() == NoTemplate) {
+    if(IdentificationModule::GetInstance().GetState() == NoTemplate) {
         if(logLevel <= Info) {
             ROS_INFO("TaskModule: Failed template creation for user: %d", DataStorage::GetInstance().GetCurrentUserXnId());
         }
@@ -215,11 +183,7 @@ void TaskModule::SavingTemplateUpdate() {
 }
 
 void TaskModule::FollowingStateUpdate() {
-    if(false) {
-        //TODO: przejście w stan Idle na podstawie danych z topica
-        IdleStateEnter();
-    }
-    else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER && DataStorage::GetInstance().IsUserPose(DataStorage::GetInstance().GetCurrentUserXnId() - 1)) {
+    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER && DataStorage::GetInstance().IsUserPose(DataStorage::GetInstance().GetCurrentUserXnId() - 1)) {
         AwaitingStateEnter();
     }
     else if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
@@ -228,11 +192,7 @@ void TaskModule::FollowingStateUpdate() {
 }
 
 void TaskModule::WaitingStateUpdate() {
-    if(false) {
-        //TODO: przejście w stan Idle na podstawie danych z topica
-        IdleStateEnter();
-    }
-    else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
+    if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {
         FollowingStateEnter();
     }
     else {
@@ -250,11 +210,7 @@ void TaskModule::WaitingStateUpdate() {
 }
 
 void TaskModule::SearchingStateUpdate() {
-    if(false) {
-        //TODO: przejście w stan Idle na podstawie danych z topica
-        IdleStateEnter();
-    }
-    else if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER && timeElapsed >= searchTimeLimit) {
+    if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER && timeElapsed >= searchTimeLimit) {
         AwaitingStateEnter();
     }
     else if(DataStorage::GetInstance().GetCurrentUserXnId() != NO_USER) {

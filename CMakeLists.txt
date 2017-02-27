@@ -8,7 +8,6 @@ find_package(catkin REQUIRED COMPONENTS
 					roscpp
 					roslib
 					tf
-                    message_generation
         )
 
 add_definitions("-std=gnu++11")
@@ -16,12 +15,6 @@ add_definitions("-std=gnu++11")
 # Find OpenNI
 find_package(PkgConfig)
 pkg_check_modules(OpenNI REQUIRED libopenni)
-
-add_message_files(
-        FILES
-        methods.msg
-        steering.msg
-)
 
 catkin_package(CATKIN_DEPENDS message_runtime)
 
