@@ -1,13 +1,15 @@
 #ifndef ELEKTRON_ESCORT_MOBILITY_MODULE_H
 #define ELEKTRON_ESCORT_MOBILITY_MODULE_H
 
-#define DEFAULT_MOBILITY_MODULE_LOG_LEVEL Error
-#define DEFAULT_MAX_LINEAR_SPEED 100
-#define DEFAULT_MAX_LINEAR_SPEED_DISTANCE 1000
-#define DEFULT_MAX_ANGULAR_SPEED 100
-#define DEFAULT_MAX_ANGULAR_SPEED_DISTANCE 500
-#define DEFAULT_POSITION_TOLERANCE 100
-#define DEFAULT_DISTANCE_TO_KEEP 2000
+#define DEFAULT_MOBILITY_MODULE_LOG_LEVEL Warn
+#define DEFAULT_DISTANCE_TO_KEEP 2500
+#define DEFAULT_MAX_LINEAR_SPEED 0.254
+#define DEFAULT_MAX_LINEAR_SPEED_DISTANCE 4000
+#define DEFAULT_POSITION_TOLERANCE 500
+#define DEFULT_MAX_FOLLOWING_TURNING_SPEED 0.36
+#define DEFAULT_MAX_FOLLOWING_TURNING_SPEED_DISTANCE 2000
+#define DEFULT_SEARCHING_TURNING_SPEED 0.12
+
 #define DRIVES_TOPIC_NAME "cmd_vel"
 
 #include <ros/ros.h>
@@ -38,11 +40,12 @@ private:
     DrivesState state;
     ros::Publisher publisher;
     double distanceToKeep;
-    double positionTolerance;
-    double maxAngularSpeed;
     double maxLinearSpeed;
     double maxLinearSpeedDistance;
-    double maxAngularSpeedDistance;
+    double positionTolerance;
+    double maxFollowingTurningSpeed;
+    double maxFollowingTurningSpeedDistance;
+    double searchingTurningSpeed;
 
     MobilityModule() {}
     MobilityModule(const MobilityModule &);

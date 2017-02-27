@@ -36,27 +36,9 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
         }
         distanceToKeep = DEFAULT_DISTANCE_TO_KEEP;
     }
-    if(!nodeHandlePrivate->getParam("positionTolerance", positionTolerance)) {
-        if(logLevel <= Warn) {
-            ROS_WARN("MobilityModule: Value of positionTolerance not found, using default: %d", DEFAULT_POSITION_TOLERANCE);
-        }
-        positionTolerance = DEFAULT_POSITION_TOLERANCE;
-    }
-    if(!nodeHandlePrivate->getParam("maxAngularSpeed", maxAngularSpeed)) {
-        if(logLevel <= Warn) {
-            ROS_WARN("MobilityModule: Value of maxAngularSpeed not found, using default: %d", DEFULT_MAX_ANGULAR_SPEED);
-        }
-        maxAngularSpeed = DEFULT_MAX_ANGULAR_SPEED;
-    }
-    if(!nodeHandlePrivate->getParam("maxAngularSpeedDistance", maxAngularSpeedDistance)) {
-        if(logLevel <= Warn) {
-            ROS_WARN("MobilityModule: Value of maxAngularSpeedDistance not found, using default: %d", DEFAULT_MAX_ANGULAR_SPEED_DISTANCE);
-        }
-        maxAngularSpeedDistance = DEFAULT_MAX_ANGULAR_SPEED_DISTANCE;
-    }
     if(!nodeHandlePrivate->getParam("maxLinearSpeed", maxLinearSpeed)) {
         if(logLevel <= Warn) {
-            ROS_WARN("MobilityModule: Value of maxLinearSpeed not found, using default: %d", DEFAULT_MAX_LINEAR_SPEED);
+            ROS_WARN("MobilityModule: Value of maxLinearSpeed not found, using default: %f", DEFAULT_MAX_LINEAR_SPEED);
         }
         maxLinearSpeed = DEFAULT_MAX_LINEAR_SPEED;
     }
@@ -66,10 +48,34 @@ bool MobilityModule::Initialize(ros::NodeHandle *nodeHandlePublic, ros::NodeHand
         }
         maxLinearSpeedDistance = DEFAULT_MAX_LINEAR_SPEED_DISTANCE;
     }
+    if(!nodeHandlePrivate->getParam("positionTolerance", positionTolerance)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("MobilityModule: Value of positionTolerance not found, using default: %d", DEFAULT_POSITION_TOLERANCE);
+        }
+        positionTolerance = DEFAULT_POSITION_TOLERANCE;
+    }
+    if(!nodeHandlePrivate->getParam("maxFollowingTurningSpeed", maxFollowingTurningSpeed)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("MobilityModule: Value of maxFollowingTurningSpeed not found, using default: %f", DEFULT_MAX_FOLLOWING_TURNING_SPEED);
+        }
+        maxFollowingTurningSpeed = DEFULT_MAX_FOLLOWING_TURNING_SPEED;
+    }
+    if(!nodeHandlePrivate->getParam("maxFollowingTurningSpeedDistance", maxFollowingTurningSpeedDistance)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("MobilityModule: Value of maxFollowingTurningSpeedDistance not found, using default: %d", DEFAULT_MAX_FOLLOWING_TURNING_SPEED_DISTANCE);
+        }
+        maxFollowingTurningSpeedDistance = DEFAULT_MAX_FOLLOWING_TURNING_SPEED_DISTANCE;
+    }
+    if(!nodeHandlePrivate->getParam("searchingTurningSpeed", searchingTurningSpeed)) {
+        if(logLevel <= Warn) {
+            ROS_WARN("MobilityModule: Value of searchingTurningSpeed not found, using default: %f", DEFULT_SEARCHING_TURNING_SPEED);
+        }
+        searchingTurningSpeed = DEFULT_SEARCHING_TURNING_SPEED;
+    }
     publisher = nodeHandlePublic->advertise<geometry_msgs::Twist>(DRIVES_TOPIC_NAME, 1);
     state = Stop;
     if(logLevel <= Info) {
-        ROS_INFO("MobilityModule: initialized");
+        ROS_INFO("MobilityModule: Initialized");
     }
     return true;
 }
@@ -107,37 +113,43 @@ void MobilityModule::StopStateUpdate() {
 }
 
 void MobilityModule::FollowUserStateUpdate() {
+    geometry_msgs::Twist velocity;
+    velocity.linear.x = 0;
+    velocity.angular.z = 0;
     if(DataStorage::GetInstance().GetCurrentUserXnId() == NO_USER) {
-        geometry_msgs::Twist velocity;
-        velocity.linear.x = 0;
-        velocity.angular.z = 0;
         publisher.publish(velocity);
         if(logLevel <= Warn){
             ROS_WARN("MobilityModule: No user to follow");
         }
     }
     else {
-        geometry_msgs::Twist velocity;
         XnPoint3D currentUserLocation;
-        currentUserLocation.X = 0.0f;
-        currentUserLocation.Z = 0.0f;
         SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), currentUserLocation);
         if(currentUserLocation.Z > distanceToKeep) {
-            velocity.linear.x = ((currentUserLocation.Z-distanceToKeep)/maxLinearSpeedDistance)*maxLinearSpeed;
-            if(velocity.linear.x > maxLinearSpeed) {
+            if(currentUserLocation.Z >= maxLinearSpeedDistance) {
                 velocity.linear.x = maxLinearSpeed;
+            }
+            else {
+                velocity.linear.x = (currentUserLocation.Z-distanceToKeep)/(maxLinearSpeedDistance-distanceToKeep);
+                velocity.linear.x *= maxLinearSpeed;
             }
         }
         if(currentUserLocation.X > positionTolerance) {
-            velocity.angular.z = -(((currentUserLocation.X-positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed);
-            if(velocity.angular.z < -maxAngularSpeed) {
-                velocity.angular.z = -maxAngularSpeed;
+            if(currentUserLocation.X >= maxFollowingTurningSpeedDistance) {
+                velocity.angular.z = -maxFollowingTurningSpeed;
+            }
+            else {
+                velocity.angular.z = (currentUserLocation.X-positionTolerance)/(maxFollowingTurningSpeedDistance-positionTolerance);
+                velocity.angular.z *= -maxFollowingTurningSpeed;
             }
         }
         else if(currentUserLocation.X < -positionTolerance) {
-            velocity.angular.z = -(((currentUserLocation.X+positionTolerance)/maxAngularSpeedDistance)*maxAngularSpeed);
-            if(velocity.angular.z > maxAngularSpeed) {
-                velocity.angular.z = maxAngularSpeed;
+            if(currentUserLocation.X <= -maxFollowingTurningSpeedDistance) {
+                velocity.angular.z = maxFollowingTurningSpeed;
+            }
+            else {
+                velocity.angular.z = (currentUserLocation.X+positionTolerance)/(maxFollowingTurningSpeedDistance-positionTolerance);
+                velocity.angular.z *= -maxFollowingTurningSpeed;
             }
         }
         publisher.publish(velocity);
@@ -155,10 +167,10 @@ void MobilityModule::SearchForUserStateUpdate() {
     }
     else {
         if(DataStorage::GetInstance().GetLastUserPosition().X >= 0) {
-            velocity.angular.z = -maxAngularSpeed/2;
+            velocity.angular.z = -searchingTurningSpeed;
         }
         else {
-            velocity.angular.z = maxAngularSpeed/2;
+            velocity.angular.z = searchingTurningSpeed;
         }
     }
     publisher.publish(velocity);

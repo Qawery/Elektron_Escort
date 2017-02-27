@@ -52,7 +52,7 @@ bool TaskModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
     timeElapsed = 0.0;
     state = Idle;
     if(logLevel <= Info) {
-        ROS_INFO("TaskModule: initialized");
+        ROS_INFO("TaskModule: Initialized");
     }
     AwaitingStateEnter();
     return true;

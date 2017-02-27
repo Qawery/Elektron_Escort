@@ -67,7 +67,7 @@ bool DataStorage::Initialize(ros::NodeHandle* nodeHandlePrivate) {
     }
     currentUserXnId = NO_USER;
     if(logLevel <= Info) {
-        ROS_INFO("DataStorage: initialized");
+        ROS_INFO("DataStorage: Initialized");
     }
     return true;
 }
@@ -96,7 +96,14 @@ void DataStorage::Update(double timeElapsed) {
         if(userCoM.Z <= 1.0) {
             toRemove.insert(*iter);
             if(logLevel <= Warn) {
-                ROS_WARN("Deleted invalid user: %d", *iter);
+                ROS_WARN("DataStorage: Deleted invalid user: %d", *iter);
+            }
+        }
+        else {
+            if(!IsPresentOnScene(*iter)) {
+                if(logLevel <= Warn) {
+                    ROS_WARN("DataStorage: Missing user inserted: %d", *iter);
+                }
             }
         }
     }

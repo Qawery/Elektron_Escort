@@ -58,7 +58,7 @@ bool IdentificationModule::Initialize(ros::NodeHandle *nodeHandlePrivate) {
         methods[IM_UserId]->SetTrustValue(methodTrustValue);
     }
     if(logLevel <= Info) {
-        ROS_INFO("IdentificationModule: initialized");
+        ROS_INFO("IdentificationModule: Initialized");
     }
     state = NoTemplate;
     return true;
@@ -90,7 +90,7 @@ void IdentificationModule::ClearTemplate() {
     }
     state = IdentificationStates::NoTemplate;
     if(logLevel <= Info) {
-        ROS_INFO("IdentificationModule: template cleared");
+        ROS_INFO("IdentificationModule: Template cleared");
     }
 }
 
@@ -100,7 +100,7 @@ void IdentificationModule::SaveTemplateOfCurrentUser() {
         methods[i]->BeginSaveTemplate();
     }
     if(logLevel <= Info) {
-        ROS_INFO("IdentificationModule: begin saving template");
+        ROS_INFO("IdentificationModule: Begin saving template");
     }
 }
 
@@ -131,12 +131,12 @@ void IdentificationModule::ContinueSavingTemplate() {
     if(templateState == Ready) {
         state = IdentificationStates::PresentTemplate;
         if(logLevel <= Info) {
-            ROS_INFO("IdentificationModule: saving template successful");
+            ROS_INFO("IdentificationModule: Saving template successful");
         }
     }
     else if (templateState == NotReady) {
         if(logLevel <= Info) {
-            ROS_INFO("IdentificationModule: saving template failed");
+            ROS_INFO("IdentificationModule: Saving template failed");
         }
         ClearTemplate();
     }
@@ -146,6 +146,7 @@ void IdentificationModule::IdentifyUser() {
     for( int i=0; i < IM_NUMBER_OF_METHODS; ++i) {
         methods[i]->Update();
     }
+    XnUserID previousUser = DataStorage::GetInstance().GetCurrentUserXnId();
     std::set<XnUserID>* presentUsers = DataStorage::GetInstance().GetPresentUsersSet();
     if(presentUsers->size()>0) {
         std::set<XnUserID>::iterator iter;
@@ -170,6 +171,11 @@ void IdentificationModule::IdentifyUser() {
         }
         if (usersRanking[bestMatchingUserIndex] >= DEFAULT_IDENTIFICATION_THRESHOLD) {
             DataStorage::GetInstance().SetCurrentUserXnId(usersIds[bestMatchingUserIndex]);
+            if(previousUser != usersIds[bestMatchingUserIndex]) {
+                if (logLevel <= Info) {
+                    ROS_INFO("IdentificationModule: Switched to user &d", usersIds[bestMatchingUserIndex]);
+                }
+            }
         } else {
             DataStorage::GetInstance().SetCurrentUserXnId(NO_USER);
         }

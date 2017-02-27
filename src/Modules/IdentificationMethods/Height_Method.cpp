@@ -13,6 +13,11 @@ void Height_Method::BeginSaveTemplate() {
     originalHeight = 0.0;
     state = CreatingTemplate;
     retries = 0;
+    //DEBUG START
+    timer=0;
+    counter=0;
+    templateCreationDistance=0.0;
+    //DEBUG END
 }
 
 void Height_Method::ContinueSaveTemplate() {
@@ -26,6 +31,11 @@ void Height_Method::ContinueSaveTemplate() {
             originalHeight += heightSample;
             ++numberOfCollectedsamples;
             retries = 0;
+            //DEBUG START
+            XnPoint3D position;
+            SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), position);
+            templateCreationDistance+=position.Z;
+            //DEBUG END
         }
         else {
             ++retries;
@@ -37,6 +47,10 @@ void Height_Method::ContinueSaveTemplate() {
     else if(numberOfCollectedsamples >= DEFAULT_NUMBER_OF_TEMPLATE_SAMPLES) {
         originalHeight = originalHeight/numberOfCollectedsamples;
         state = Ready;
+        //DEBUG START
+        templateCreationDistance=templateCreationDistance/numberOfCollectedsamples;
+        ROS_ERROR("Calculated template: %f; At distance: %f", originalHeight, templateCreationDistance);
+        //DEBUG END
     }
 }
 
@@ -46,8 +60,21 @@ void Height_Method::Update() {
 double Height_Method::RateUser(XnUserID userId) {
     double confidence;
     double userHeight = CalculateHeight(userId, confidence);
+    double result = userHeight - originalHeight;
+    //DEBUG START
+    if(timer <= 0 && counter < 600) {
+        timer = 0;
+        XnPoint3D position;
+        SensorsModule::GetInstance().GetUserGenerator().GetCoM(DataStorage::GetInstance().GetCurrentUserXnId(), position);
+        ROS_ERROR("diff_walk_obr = [diff_walk_obr; %f, %f];", position.Z, result);
+        counter++;
+    }
+    if(timer > 0) {
+        --timer;
+    }
+    //DEBUG END
     if(abs(userHeight - originalHeight) <= DEFAULT_HEIGHT_TOLERANCE) {
-        return ((DEFAULT_HEIGHT_TOLERANCE-abs(userHeight - originalHeight))/DEFAULT_HEIGHT_TOLERANCE)*confidence;
+        return 1.0;
     }
     else {
         return 0.0;
@@ -106,12 +133,9 @@ double Height_Method::CalculateJointDistance(XnUserID const& userId, XnSkeletonJ
     XnSkeletonJointPosition joint_B_Postition;
     SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().GetSkeletonJointPosition(userId, jointA, joint_A_Postition);
     SensorsModule::GetInstance().GetUserGenerator().GetSkeletonCap().GetSkeletonJointPosition(userId, jointB, joint_B_Postition);
-    double xDistance = 0.0;
-    double yDistance = 0.0;
-    double zDistance = 0.0;
-    xDistance = abs(joint_A_Postition.position.X - joint_B_Postition.position.X);
-    yDistance = abs(joint_A_Postition.position.Y - joint_B_Postition.position.Y);
-    zDistance = abs(joint_A_Postition.position.Z - joint_B_Postition.position.Z);
+    double xDistance = abs(joint_A_Postition.position.X - joint_B_Postition.position.X);
+    double yDistance = abs(joint_A_Postition.position.Y - joint_B_Postition.position.Y);
+    double zDistance = abs(joint_A_Postition.position.Z - joint_B_Postition.position.Z);
     confidence = std::min(joint_A_Postition.fConfidence, joint_B_Postition.fConfidence);
     return sqrt((xDistance*xDistance)+(yDistance*yDistance)+(zDistance*zDistance));
 }

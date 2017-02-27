@@ -80,7 +80,7 @@ bool SensorsModule::Initialize(ros::NodeHandle* nodeHandlePrivate) {
     userGenerator.GetSkeletonCap().SetSmoothing(SMOOTHING_FACTOR);
     stateMutex.unlock();
     if(logLevel <= Info) {
-        ROS_INFO("SensorsModule: initialized");
+        ROS_INFO("SensorsModule: Initialized");
     }
     return true;
 }
