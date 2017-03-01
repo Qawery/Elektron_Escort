@@ -1,0 +1,37 @@
+<launch>
+	<master auto="start"/>
+	<node pkg="elektron_escort" type="escort_main" respawn="false" name="escort_main" output="screen">
+
+        <param name="escortMainLogLevel" type="int" value="1"/>
+        <param name="mainLoopRate" type="double" value="30.0"/>
+
+        <param name="dataStorageLogLevel" type="int" value="1"/>
+        <param name="maxUsers" type="int" value="20"/>
+        <param name="poseCooldownTime" type="double" value="3.0"/>
+
+        <param name="mobilityModuleLogLevel" type="int" value="1"/>
+        <param name="distanceToKeep" type="double" value="2500.0"/>
+        <param name="maxLinearSpeed" type="double" value="0.254"/>
+        <param name="maxLinearSpeedDistance" type="double" value="4000.0"/>
+        <param name="positionTolerance" type="double" value="100.0"/>
+        <param name="maxFollowingTurningSpeed" type="double" value="0.36"/>
+        <param name="maxFollowingTurningSpeedDistance" type="double" value="2000.0"/>
+        <param name="searchingTurningSpeed" type="double" value="0.12"/>
+
+        <param name="sensorsModuleLogLevel" type="int" value="0"/>
+
+        <param name="identificationModuleLogLevel" type="int" value="1"/>
+        <param name="identificationThreshold" type="double" value="0.7"/>
+        <param name="userID_MethodTrust" type="double" value="0.2"/>
+        <param name="height_MethodTrust" type="double" value="1.0"/>
+
+        <param name="taskModuleLogLevel" type="int" value="1"/>
+        <param name="waitTimeLimit" type="double" value="5.0"/>
+        <param name="searchTimeLimit" type="double" value="10.0"/>
+        <param name="maxUserDistance" type="double" value="4000.0"/>
+
+        <include file="$(find openni_launch)/launch/openni.launch" />
+        <include file="$(find elektron_base)/elektron_base.launch" />
+
+	</node>
+</launch>
