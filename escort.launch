@@ -21,7 +21,7 @@
         <param name="sensorsModuleLogLevel" type="int" value="0"/>
 
         <param name="identificationModuleLogLevel" type="int" value="1"/>
-        <param name="identificationThreshold" type="double" value="0.7"/>
+        <param name="identificationThreshold" type="double" value="0.9"/>
         <param name="userID_MethodTrust" type="double" value="0.2"/>
         <param name="height_MethodTrust" type="double" value="1.0"/>
 
