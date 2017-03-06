@@ -1,6 +1,8 @@
 #ifndef ELEKTRON_ESCORT_USERID_METHOD_H
 #define ELEKTRON_ESCORT_USERID_METHOD_H
 
+#define REPEATS_LIMIT 60
+
 #include "Identification_Method.h"
 
 
@@ -15,6 +17,7 @@ public:
 
 private:
     XnUserID originalId;
+    int repeats = 0;
 };
 
 #endif //ELEKTRON_ESCORT_USERID_METHOD_H
